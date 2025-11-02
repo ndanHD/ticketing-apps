@@ -2,21 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class TicketRating extends Model
 {
-    use HasFactory;
-
     protected $table = 'tbl_ticket_ratings';
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
-    protected $fillable = [
-        'ticket_id',
-        'user_id',
-        'target_user_id',
-        'rating'
-    ];
+    protected $fillable = ['id', 'ticket_id', 'user_id', 'target_user_id', 'rating'];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->id) $model->id = (string) Str::uuid();
+        });
+    }
 
     public function ticket()
     {

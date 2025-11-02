@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Ticket extends Model
 {
-    use HasFactory;
-
     protected $table = 'tbl_tickets';
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
     protected $fillable = [
+        'id',
         'ticket_type_id',
         'sla_id',
         'assign_to',
@@ -20,6 +22,13 @@ class Ticket extends Model
         'detail'
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->id) $model->id = (string) Str::uuid();
+        });
+    }
+
     public function ticketType()
     {
         return $this->belongsTo(TicketType::class, 'ticket_type_id');
@@ -27,10 +36,10 @@ class Ticket extends Model
 
     public function sla()
     {
-        return $this->belongsTo(Sla::class, 'sla_id');
+        return $this->belongsTo(SLA::class, 'sla_id');
     }
 
-    public function assignedTo()
+    public function assignTo()
     {
         return $this->belongsTo(User::class, 'assign_to');
     }
@@ -48,5 +57,10 @@ class Ticket extends Model
     public function ratings()
     {
         return $this->hasMany(TicketRating::class, 'ticket_id');
+    }
+
+    public function commentRatings()
+    {
+        return $this->hasMany(TicketCommentRating::class, 'ticket_id');
     }
 }

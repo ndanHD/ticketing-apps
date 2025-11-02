@@ -2,20 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class HandlerShiftSchedule extends Model
 {
-    use HasFactory;
-
     protected $table = 'tbl_handler_shift_schedules';
+    protected $primaryKey = 'id';
+    protected $keyType = 'string';
+    public $incrementing = false;
 
-    protected $fillable = [
-        'user_id',
-        'shift_id',
-        'date'
-    ];
+    protected $fillable = ['id', 'user_id', 'shift_id', 'date'];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (!$model->id) $model->id = (string) Str::uuid();
+        });
+    }
 
     public function user()
     {

@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_ticket_ratings', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('ticket_id')->constrained('tbl_tickets')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('tbl_users')->onDelete('cascade');
-            $table->foreignId('target_user_id')->constrained('tbl_users')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('ticket_id');
+            $table->uuid('user_id');
+            $table->uuid('target_user_id');
+            $table->tinyInteger('rating');
             $table->timestamps();
+
+            $table->foreign('ticket_id')->references('id')->on('tbl_tickets')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('tbl_users')->cascadeOnDelete();
+            $table->foreign('target_user_id')->references('id')->on('tbl_users')->cascadeOnDelete();
         });
     }
 

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_users', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('role_id')->constrained('tbl_roles')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('role_id');
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('reset_token')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->foreign('role_id')->references('id')->on('tbl_roles')->cascadeOnDelete();
         });
     }
 

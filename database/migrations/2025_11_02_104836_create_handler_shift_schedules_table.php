@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tbl_handler_shift_schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('tbl_users')->onDelete('cascade');
-            $table->foreignId('shift_id')->constrained('tbl_shifts')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->uuid('shift_id');
             $table->date('date');
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('tbl_users')->cascadeOnDelete();
+            $table->foreign('shift_id')->references('id')->on('tbl_shifts')->cascadeOnDelete();
         });
     }
 
