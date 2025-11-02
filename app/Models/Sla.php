@@ -5,19 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class Sla extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_roles';
+    protected $table = 'tbl_slas';
 
     protected $fillable = [
         'name',
-        'can_handle_ticket'
+        'duration'
     ];
 
-    public function users()
+    public function tickets()
     {
-        return $this->hasMany(User::class, 'role_id');
+        return $this->hasMany(Ticket::class, 'sla_id');
     }
 }

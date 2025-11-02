@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_roles', function (Blueprint $table) {
+        Schema::create('tbl_handler_shift_schedules', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->boolean('can_handle_ticket')->default(false);
+            $table->foreignId('user_id')->constrained('tbl_users')->onDelete('cascade');
+            $table->foreignId('shift_id')->constrained('tbl_shifts')->onDelete('cascade');
+            $table->date('date');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_roles');
+        Schema::dropIfExists('tbl_handler_shift_schedul');
     }
 };

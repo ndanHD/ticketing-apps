@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class TicketType extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_roles';
+    protected $table = 'tbl_ticket_types';
 
     protected $fillable = [
         'name',
-        'can_handle_ticket'
+        'description',
+        'is_active'
     ];
 
-    public function users()
+    public function tickets()
     {
-        return $this->hasMany(User::class, 'role_id');
+        return $this->hasMany(Ticket::class, 'ticket_type_id');
     }
 }

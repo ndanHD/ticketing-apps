@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tbl_roles', function (Blueprint $table) {
+        Schema::create('tbl_ticket_comment_ratings', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->boolean('can_handle_ticket')->default(false);
+            $table->foreignId('ticket_id')->constrained('tbl_tickets')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('tbl_users')->onDelete('cascade');
+            $table->text('comment');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tbl_roles');
+        Schema::dropIfExists('tbl_ticket_comment_ratings');
     }
 };

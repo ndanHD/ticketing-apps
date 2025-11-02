@@ -5,19 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class Shift extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_roles';
+    protected $table = 'tbl_shift';
 
     protected $fillable = [
         'name',
-        'can_handle_ticket'
+        'start_time',
+        'end_time',
     ];
 
-    public function users()
+    public function handlerSchedules()
     {
-        return $this->hasMany(User::class, 'role_id');
+        return $this->hasMany(HandlerShiftSchedule::class, 'shift_id');
     }
 }
