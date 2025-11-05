@@ -19,7 +19,9 @@ class Ticket extends Model
         'assign_to',
         'created_by',
         'status',
-        'detail'
+        'title',
+        'description',
+        'priority'
     ];
 
     protected static function booted()

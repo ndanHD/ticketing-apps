@@ -12,7 +12,7 @@ class SLA extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id', 'name', 'duration'];
+    protected $fillable = ['id', 'name', 'response_time', 'resolution_time', 'description'];
 
     protected static function booted()
     {

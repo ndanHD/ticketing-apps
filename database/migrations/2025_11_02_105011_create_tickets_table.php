@@ -15,17 +15,20 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('ticket_type_id');
             $table->uuid('sla_id');
-            $table->uuid('assign_to')->nullable();
             $table->uuid('created_by');
-            $table->enum('status', ['open', 'assigned', 'in_progress', 'resolved'])->default('open');
-            $table->text('detail');
-            $table->timestamp('sla_due_at')->nullable();
+            $table->uuid('assign_to')->nullable();
+            $table->string('title');
+            $table->text('description');
+            $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
+            $table->enum('priority', ['low', 'medium', 'high'])->default('low');
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
             $table->timestamps();
 
             $table->foreign('ticket_type_id')->references('id')->on('tbl_ticket_types')->cascadeOnDelete();
             $table->foreign('sla_id')->references('id')->on('tbl_slas')->cascadeOnDelete();
-            $table->foreign('assign_to')->references('id')->on('tbl_users')->nullOnDelete();
             $table->foreign('created_by')->references('id')->on('tbl_users')->cascadeOnDelete();
+            $table->foreign('assign_to')->references('id')->on('tbl_users')->nullOnDelete();
         });
     }
 

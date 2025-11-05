@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('tbl_slas', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->integer('duration');
+            $table->integer('response_time');
+            $table->integer('resolution_time');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

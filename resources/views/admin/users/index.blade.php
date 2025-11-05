@@ -1,11 +1,13 @@
 @extends('admin.layout')
 
-@section('title', 'Users')
+@section('title', 'Manajemen User')
 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Users</h1>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Create User</a>
+        <h1>Manajemen User</h1>
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Tambah User
+        </a>
     </div>
 
     <div class="table-responsive">
@@ -13,10 +15,10 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>Name</th>
+                <th>Nama</th>
                 <th>Email</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>Dibuat</th>
+                <th>Aksi</th>
             </tr>
             </thead>
             <tbody>
@@ -28,17 +30,21 @@
                     <td>{{ $user->created_at->format('Y-m-d') }}</td>
                     <td>{{ $user->updated_at->format('Y-m-d') }}</td>
                     <td>
-                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary">Edit</a>
+                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline swal-delete" data-name="{{ $user->name }}">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Delete</button>
+                            <button class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
                         </form>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5">No users found.</td>
+                    <td colspan="5" class="text-center">Tidak ada data user.</td>
                 </tr>
             @endforelse
             </tbody>

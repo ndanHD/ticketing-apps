@@ -40,6 +40,14 @@ class Users extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
+    /**
+     * Periksa apakah user memiliki role tertentu
+     */
+    public function hasRole($roleName)
+    {
+        return $this->role && $this->role->name === $roleName;
+    }
+
     public function handlerShiftSchedules()
     {
         return $this->hasMany(HandlerShiftSchedule::class, 'user_id');

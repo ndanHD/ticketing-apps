@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class RoleSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Menjalankan seeder role dan menyimpan UUID role ke properti static
      */
     public static $roles = [];
     public function run(): void
@@ -19,9 +19,9 @@ class RoleSeeder extends Seeder
         //
 
         $roles = [
-            'super_admin' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
+            'superadmin' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
             'admin' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
-            'user_handler' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
+            'handler' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
             'user' => ['id' => Str::uuid(), 'can_handle_ticket' => false],
         ];
 

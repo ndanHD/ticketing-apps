@@ -62,7 +62,8 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+            // Gunakan model Users (tbl_users) untuk autentikasi session-based di web
+            'model' => App\Models\Users::class,
         ],
 
         // 'users' => [

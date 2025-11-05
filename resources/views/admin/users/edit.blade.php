@@ -5,7 +5,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Edit User</h1>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Back to list</a>
+    <a href="{{ route('superadmin.users.index') }}" class="btn btn-outline-secondary">Back to list</a>
     </div>
 
     <form action="{{ route('admin.users.update', $user) }}" method="POST">

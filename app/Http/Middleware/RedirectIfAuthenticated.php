@@ -11,9 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 class RedirectIfAuthenticated
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Handle permintaan HTTP yang masuk.
+     * Jika user sudah login, redirect ke halaman yang sesuai dengan role.
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
@@ -21,7 +20,16 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                $user = Auth::guard($guard)->user();
+                
+                // Redirect berdasarkan role user
+                if ($user->role?->name === 'admin') {
+                    return redirect()->route('admin.dashboard');
+                } elseif ($user->role?->name === 'handler') {
+                    return redirect()->route('handler.dashboard');
+                } else {
+                    return redirect()->route('user.dashboard');
+                }
             }
         }
 

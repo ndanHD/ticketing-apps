@@ -12,7 +12,7 @@ class TicketComment extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id', 'ticket_id', 'user_id', 'comment'];
+    protected $fillable = ['id', 'ticket_id', 'user_id', 'comment', 'is_rating_comment'];
 
     protected static function booted()
     {
