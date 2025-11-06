@@ -23,7 +23,9 @@ Route::middleware('guest')->group(function() {
     Route::post('register', [WebAuthController::class, 'register'])->name('register.post');
 });
 
-Route::post('logout', [WebAuthController::class, 'logout'])->name('logout.post');
+Route::middleware('require.login')->group(function() {
+    Route::post('logout', [WebAuthController::class, 'logout'])->name('logout.post');
+});
 
 // User area - protected by user role
 Route::middleware(['require.login', 'role:user'])->group(function() {
@@ -48,16 +50,21 @@ Route::middleware(['require.login', 'role:handler'])->prefix('handler')->group(f
     Route::post('tickets/{ticket}/comments', [HandlerController::class, 'addComment'])->name('handler.tickets.comments.store');
 });
 
-// Admin area - protected by admin role
-Route::middleware(['require.login', 'role:admin'])->prefix('admin')->group(function () {
+// Admin area - protected by admin and superadmin roles
+Route::middleware(['require.login', 'role:admin|superadmin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
     
-    // User management - only superadmin can access these routes (still under /admin prefix)
-    Route::middleware('role:superadmin')->group(function () {
-        Route::controller(AdminController::class)->group(function () {
+    // User management:
+    // - admin|superadmin can access the add-user (create/store) routes
+    // - only superadmin can list/edit/delete users
+    Route::controller(AdminController::class)->group(function () {
+        // Accessible by admin and superadmin
+        Route::get('users/create', 'usersCreate')->name('admin.users.create')->middleware('role:admin|superadmin');
+        Route::post('users', 'usersStore')->name('admin.users.store')->middleware('role:admin|superadmin');
+
+        // Only superadmin for listing and modifying users
+        Route::middleware('role:superadmin')->group(function () {
             Route::get('users', 'usersIndex')->name('admin.users.index');
-            Route::get('users/create', 'usersCreate')->name('admin.users.create');
-            Route::post('users', 'usersStore')->name('admin.users.store');
             Route::get('users/{user}/edit', 'usersEdit')->name('admin.users.edit');
             Route::put('users/{user}', 'usersUpdate')->name('admin.users.update');
             Route::delete('users/{user}', 'usersDestroy')->name('admin.users.destroy');

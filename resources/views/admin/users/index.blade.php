@@ -30,16 +30,20 @@
                     <td>{{ $user->created_at->format('Y-m-d') }}</td>
                     <td>{{ $user->updated_at->format('Y-m-d') }}</td>
                     <td>
-                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline swal-delete" data-name="{{ $user->name }}">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i> Hapus
-                            </button>
-                        </form>
+                        @if(!$user->hasRole('superadmin'))
+                            <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline swal-delete" data-name="{{ $user->name }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i> Hapus
+                                </button>
+                            </form>
+                        @else
+                            <span class="badge bg-secondary">Superadmin</span>
+                        @endif
                     </td>
                 </tr>
             @empty

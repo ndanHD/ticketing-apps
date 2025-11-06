@@ -16,15 +16,20 @@ class RoleMiddleware
      * @param  string  $role
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, string $role)
+    public function handle(Request $request, Closure $next, string $roles)
     {
         if (!auth()->check()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $user = auth()->user();
-        // cek relasi role jika ada
-        if (!$user->role || ($user->role->name ?? null) !== $role) {
+        if (!$user->role) {
+            return response()->json(['error' => 'Akses ditolak'], 403);
+        }
+
+        // Split roles by pipe and check if user has any of the required roles
+        $allowedRoles = explode('|', $roles);
+        if (!in_array($user->role->name, $allowedRoles)) {
             return response()->json(['error' => 'Akses ditolak'], 403);
         }
 

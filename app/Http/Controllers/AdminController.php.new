@@ -25,9 +25,7 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         
-        $roleName = $user->role?->name ?? null;
-
-        if ($roleName === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             // Superadmin can assign user, handler, and admin roles
             return Role::whereIn('name', ['user', 'handler', 'admin'])->get();
         } else {
@@ -86,8 +84,7 @@ class AdminController extends Controller
     public function usersEdit(User $user)
     {
         // Prevent editing superadmin users
-        $roleName = $user->role?->name ?? null;
-        if ($roleName === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'Akun superadmin tidak dapat diedit.');
         }
@@ -102,8 +99,7 @@ class AdminController extends Controller
     public function usersUpdate(Request $request, User $user)
     {
         // Double-check protection against editing superadmin
-        $roleName = $user->role?->name ?? null;
-        if ($roleName === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'Akun superadmin tidak dapat diedit.');
         }
@@ -137,8 +133,7 @@ class AdminController extends Controller
     public function usersDestroy(User $user)
     {
         // Prevent deleting superadmin users
-        $roleName = $user->role?->name ?? null;
-        if ($roleName === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'Akun superadmin tidak dapat dihapus.');
         }
@@ -148,7 +143,7 @@ class AdminController extends Controller
             $query->where('name', 'superadmin');
         })->count();
 
-        if ($superadminCount <= 1 && $roleName === 'superadmin') {
+        if ($superadminCount <= 1 && $user->hasRole('superadmin')) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'Tidak dapat menghapus superadmin terakhir.');
         }

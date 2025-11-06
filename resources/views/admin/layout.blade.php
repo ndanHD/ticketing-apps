@@ -18,7 +18,7 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url('/') }}">{{ config('app.name', 'Laravel') }}</a>
+        <a class="navbar-brand" href="{{ url('/') }}">{{ config('app.name', 'Kawano') }}</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -125,6 +125,24 @@
                             <i class="bi bi-clock-history me-2"></i> Daftar SLA
                         </a>
                     </li>
+
+                    @if(auth()->check() && (auth()->user()->hasRole('superadmin') || auth()->user()->hasRole('admin')))
+                        <li class="nav-item mt-4 mb-2">
+                            <span class="nav-link text-muted text-uppercase small fw-bold">Manajemen User</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" href="{{ route('admin.users.create') }}">
+                                <i class="bi bi-person-plus me-2"></i> Tambah User
+                            </a>
+                        </li>
+                        @if(auth()->user()->hasRole('superadmin'))
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center" href="{{ route('admin.users.index') }}">
+                                    <i class="bi bi-people me-2"></i> Daftar User
+                                </a>
+                            </li>
+                        @endif
+                    @endif
                 </ul>
             </div>
         </div>

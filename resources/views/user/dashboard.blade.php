@@ -28,7 +28,7 @@
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5 class="card-title">Sedang Diproses</h5>
-                    <h2 class="card-text mb-0">{{ $stats['process_tickets'] }}</h2>
+                    <h2 class="card-text mb-0">{{ $stats['in_progress_tickets'] }}</h2>
                 </div>
             </div>
         </div>
@@ -69,7 +69,7 @@
                                 <tr>
                                     <td>{{ $ticket->id }}</td>
                                     <td>{{ $ticket->ticketType->name ?? '-' }}</td>
-                                    <td>{{ $ticket->subject }}</td>
+                                    <td>{{ $ticket->title }}</td>
                                     <td>
                                         <span class="badge bg-{{ $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning') }}">
                                             {{ $ticket->status }}

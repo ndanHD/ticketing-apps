@@ -22,8 +22,8 @@ class UserController extends Controller
            'open_tickets' => \App\Models\Ticket::where('created_by', $userId)
                ->where('status', 'open')
                ->count(),
-           'process_tickets' => \App\Models\Ticket::where('created_by', $userId)
-               ->where('status', 'process')
+           'in_progress_tickets' => \App\Models\Ticket::where('created_by', $userId)
+               ->where('status', 'in_progress')
                ->count(),
            'closed_tickets' => \App\Models\Ticket::where('created_by', $userId)
                ->where('status', 'closed')

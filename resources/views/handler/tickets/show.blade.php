@@ -114,7 +114,8 @@
         <div class="modal-content">
                 <form action="{{ route('handler.tickets.close') }}" method="POST" onsubmit="return validateCloseForm(event)">
                     @csrf
-                    <input type="hidden" name="ticket_id" id="modalTicketId">
+                    <input type="hidden" name="ticket_id" id="modalTicketId" value="$ticket->id">
+                    
                     
                     <div class="modal-header">
                     <h5 class="modal-title">Tutup Tiket</h5>
