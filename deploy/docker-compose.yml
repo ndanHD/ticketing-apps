@@ -1,6 +1,4 @@
 version: "3.9"
-git config --global core.autocrlf
-
 services:
     # PHP & Laravel
     app:

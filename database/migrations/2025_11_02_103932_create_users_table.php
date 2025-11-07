@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('tbl_users', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('role_id');
+            $table->uuid('outlet_id')->nullable();
             $table->string('name');
-            $table->string('jabatan');
-            $table->string('outlet');
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('job_tittle');
             $table->boolean('must_change_password')->default(true);
             $table->timestamp('last_change_password')->nullable();
             $table->string('reset_token')->nullable();
@@ -26,6 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('role_id')->references('id')->on('tbl_roles')->cascadeOnDelete();
+            $table->foreign('outlet_id')->references('id')->on('tbl_outlets')->cascadeOnDelete();
         });
     }
 
@@ -34,6 +35,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('tbl_users', function (Blueprint $table) {
+            $table->dropForeign(['role_id']);
+            $table->dropForeign(['outlet_id']);
+            $table->dropForeign(['deleted_by']);
+        });
         Schema::dropIfExists('tbl_users');
     }
 };
