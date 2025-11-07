@@ -13,24 +13,27 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('auth.login');
-});
+})->name('login');
+
+Route::get('/password/change', [WebAuthController::class, 'showChangePassword'])->name('password.change')->middleware('auth');
+Route::post('/password/change', [WebAuthController::class, 'changePassword'])->name('password.change.submit')->middleware('auth');
 
 // Authentication routes
-Route::middleware('guest')->group(function() {
+Route::middleware('guest')->group(function () {
     Route::get('login', [WebAuthController::class, 'showLogin'])->name('login.show');
     Route::post('login', [WebAuthController::class, 'login'])->name('login.post');
     Route::get('register', [WebAuthController::class, 'showRegister'])->name('register.show');
     Route::post('register', [WebAuthController::class, 'register'])->name('register.post');
 });
 
-Route::middleware('require.login')->group(function() {
+Route::middleware('require.login')->group(function () {
     Route::post('logout', [WebAuthController::class, 'logout'])->name('logout.post');
 });
 
 // User area - protected by user role
-Route::middleware(['require.login', 'role:user'])->group(function() {
+Route::middleware(['require.login', 'must_change_password',  'role:user'])->group(function () {
     Route::get('dashboard', [UserController::class, 'index'])->name('user.dashboard');
-    
+
     Route::prefix('tickets')->controller(TicketUserController::class)->group(function () {
         Route::get('/', 'index')->name('user.tickets.index');
         Route::get('/create', 'create')->name('user.tickets.create');
@@ -42,7 +45,7 @@ Route::middleware(['require.login', 'role:user'])->group(function() {
 });
 
 // Handler area - protected by handler role
-Route::middleware(['require.login', 'role:handler'])->prefix('handler')->group(function() {
+Route::middleware(['require.login', 'must_change_password',  'role:handler'])->prefix('handler')->group(function () {
     Route::get('dashboard', [HandlerController::class, 'dashboard'])->name('handler.dashboard');
     Route::get('tickets', [HandlerController::class, 'index'])->name('handler.tickets.index');
     Route::get('tickets/{ticket}', [HandlerController::class, 'show'])->name('handler.tickets.show');
@@ -51,9 +54,9 @@ Route::middleware(['require.login', 'role:handler'])->prefix('handler')->group(f
 });
 
 // Admin area - protected by admin and superadmin roles
-Route::middleware(['require.login', 'role:admin|superadmin'])->prefix('admin')->group(function () {
+Route::middleware(['require.login', 'must_change_password',  'role:admin|superadmin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
-    
+
     // User management:
     // - admin|superadmin can access the add-user (create/store) routes
     // - only superadmin can list/edit/delete users
@@ -70,7 +73,7 @@ Route::middleware(['require.login', 'role:admin|superadmin'])->prefix('admin')->
             Route::delete('users/{user}', 'usersDestroy')->name('admin.users.destroy');
         });
     });
-    
+
     Route::resource('slas', SlaController::class)->except(['show'])->names([
         'index' => 'admin.slas.index',
         'create' => 'admin.slas.create',
@@ -88,7 +91,7 @@ Route::middleware(['require.login', 'role:admin|superadmin'])->prefix('admin')->
         'update' => 'admin.ticket-types.update',
         'destroy' => 'admin.ticket-types.destroy'
     ]);
-    
+
     Route::prefix('tickets')->controller(TicketController::class)->group(function () {
         Route::get('/', 'index')->name('admin.tickets.index');
         Route::get('/create', 'create')->name('admin.tickets.create');
@@ -101,6 +104,3 @@ Route::middleware(['require.login', 'role:admin|superadmin'])->prefix('admin')->
         Route::delete('/{ticket}', 'destroy')->name('admin.tickets.destroy');
     });
 });
-
-
-

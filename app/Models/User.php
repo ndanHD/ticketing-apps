@@ -27,6 +27,8 @@ class User extends Authenticatable
         'role_id',
         'name',
         'email',
+        'jabatan',
+        'outlet',
         'password',
         'must_change_password',
         'last_change_password',

@@ -19,10 +19,10 @@ class RoleSeeder extends Seeder
         //
 
         $roles = [
-            'superadmin' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
-            'admin' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
-            'handler' => ['id' => Str::uuid(), 'can_handle_ticket' => true],
-            'user' => ['id' => Str::uuid(), 'can_handle_ticket' => false],
+            'superadmin' => ['id' => Str::uuid()],
+            'admin' => ['id' => Str::uuid()],
+            'handler' => ['id' => Str::uuid()],
+            'user' => ['id' => Str::uuid()],
         ];
 
         foreach ($roles as $name => $data) {

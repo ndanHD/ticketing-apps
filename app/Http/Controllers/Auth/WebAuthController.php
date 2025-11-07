@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Users;
 use App\Models\Role;
+use Carbon\Carbon;
 
 class WebAuthController extends Controller
 {
@@ -25,33 +26,76 @@ class WebAuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'password' => ['required']
         ]);
 
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            
+
             $user = Auth::user();
-            
-            // Redirect based on user role
-            if ($user->role) {
-                switch ($user->role->name) {
-                    case 'admin':
-                        return redirect()->intended(route('admin.dashboard'));
-                    case 'handler':
-                        return redirect()->intended(route('handler.tickets.index'));
-                    default:
-                        return redirect()->intended(route('user.tickets.index'));
-                }
+
+            if ($user->must_change_password) {
+                return redirect()->route('password.change')->with('warning', 'You must change your password.');
             }
-            
-            // Default redirect if no role is set
-            return redirect()->intended(route('user.tickets.index'));
+
+            return $this->redirectToRoleDashboard($user);
         }
 
-        return back()->withErrors(['email' => 'Email atau password salah'])->onlyInput('email');
+        return back()->withErrors(['email' => 'The provided credentials do not match our records.',]);
     }
+
+    /**
+     * Redirect to dashboard based on role
+     */
+    private function redirectToRoleDashboard($user)
+    {
+        return match ($user->role->name ?? null) {
+            'admin', 'superadmin' => redirect()->intended(route('admin.dashboard')),
+            'handler' => redirect()->intended(route('handler.dashboard')),
+            'user' => redirect()->intended(route('user.dashboard')),
+        };
+    }
+
+
+    /**
+     * Menampilkan form ganti password
+     */
+    public function showChangePassword()
+    {
+        return view('auth.change-password');
+    }
+
+    /**
+     * Process password change
+     */
+    public function changePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        $rules = [
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+
+        if (!$user->must_change_password) {
+            $rules['current_password'] = ['required'];
+        }
+
+        $request->validate($rules);
+
+        if (!$user->must_change_password && !Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'must_change_password' => false,
+            'last_change_password' => Carbon::now()->toDateTimeString()
+        ]);
+
+        return $this->redirectToRoleDashboard($user)->with('success', 'Password changed successfully.');
+    }
+
 
     /**
      * Menampilkan form register
@@ -67,9 +111,9 @@ class WebAuthController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','email','max:255'],
-            'password' => ['required','string','min:8','confirmed']
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', 'string', 'min:8', 'confirmed']
         ]);
 
         // Get the default user role

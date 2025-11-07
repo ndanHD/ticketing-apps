@@ -19,8 +19,8 @@ return new class extends Migration
             $table->uuid('assign_to')->nullable();
             $table->string('title');
             $table->text('description');
-            $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
-            $table->enum('priority', ['low', 'medium', 'high'])->default('low');
+            $table->enum('status', ['open', 'in_progress', 'pending', 'resolved', 'closed', 'resolve'])->default('open');
+            $table->enum('priority', ['low', 'medium', 'high', 'critical'])->default('low');
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();

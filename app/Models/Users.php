@@ -20,6 +20,8 @@ class Users extends Authenticatable
         'id',
         'role_id',
         'name',
+        'jabatan',
+        'outlet',
         'email',
         'password',
         'must_change_password',

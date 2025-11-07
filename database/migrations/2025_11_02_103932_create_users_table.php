@@ -15,6 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('role_id');
             $table->string('name');
+            $table->string('jabatan');
+            $table->string('outlet');
             $table->string('email')->unique();
             $table->string('password');
             $table->boolean('must_change_password')->default(true);

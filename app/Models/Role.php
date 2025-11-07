@@ -15,7 +15,7 @@ class Role extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
-    protected $fillable = ['id', 'name', 'can_handle_ticket'];
+    protected $fillable = ['id', 'name'];
 
     public function users()
     {

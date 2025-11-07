@@ -18,7 +18,9 @@ class UserSeeder extends Seeder
         Users::create([
             'id' => Str::uuid(),
             'role_id' => $roles['admin'],
-            'name' => 'Administrator',
+            'name' => 'Ngadmin',
+            'jabatan' => 'Lead Outlet',
+            'outlet' => 'Jakarta',
             'email' => 'admin@example.com',
             'password' => Hash::make('password123'),
             'is_active' => true
@@ -27,7 +29,9 @@ class UserSeeder extends Seeder
         Users::create([
             'id' => Str::uuid(),
             'role_id' => $roles['handler'],
-            'name' => 'Handler User',
+            'name' => 'Hendri',
+            'jabatan' => 'IT',
+            'outlet' => 'Jakarta',
             'email' => 'handler@example.com',
             'password' => Hash::make('password123'),
             'is_active' => true
@@ -36,15 +40,19 @@ class UserSeeder extends Seeder
         Users::create([
             'id' => Str::uuid(),
             'role_id' => $roles['user'],
-            'name' => 'Regular User',
+            'name' => 'Sri',
+            'jabatan' => 'Kasir',
+            'outlet' => 'Jakarta',
             'email' => 'user@example.com',
             'password' => Hash::make('password123'),
             'is_active' => true
         ]);
-         Users::create([
+        Users::create([
             'id' => Str::uuid(),
             'role_id' => $roles['superadmin'],
-            'name' => 'Super Admin',
+            'name' => 'Supri',
+            'jabatan' => 'Manager',
+            'outlet' => 'Jakarta',
             'email' => 'superadmin@example.com',
             'password' => Hash::make('password123'),
             'is_active' => true
