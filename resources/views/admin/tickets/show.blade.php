@@ -20,7 +20,8 @@
                     <p><strong>SLA:</strong> {{ $ticket->sla->name ?? '-' }}</p>
                     <p>
                         <strong>Status:</strong>
-                        <span class="badge bg-{{ $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning') }}">
+                        <span
+                            class="badge bg-{{ $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning') }}">
                             {{ $ticket->status }}
                         </span>
                     </p>
@@ -30,14 +31,18 @@
                     <p><strong>Tanggal:</strong> {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
                     <p>
                         <strong>Prioritas:</strong>
-                        <span class="badge bg-{{ $ticket->priority === 'high' ? 'danger' : ($ticket->priority === 'medium' ? 'warning' : 'info') }}">
+                        <span
+                            class="badge bg-{{ $ticket->priority === 'high' ? 'danger' : ($ticket->priority === 'medium' ? 'warning' : 'info') }}">
                             {{ $ticket->priority }}
                         </span>
                     </p>
                     <p>
                         <strong>Rating:</strong>
-                        @if(isset($ratingsCount) && $ratingsCount > 0)
-                            @include('components.star-rating', ['rating' => $ratingsAvg, 'count' => $ratingsCount])
+                        @if (isset($ratingsCount) && $ratingsCount > 0)
+                            @include('components.star-rating', [
+                                'rating' => $ratingsAvg,
+                                'count' => $ratingsCount,
+                            ])
                         @else
                             <span class="text-muted">Belum ada rating</span>
                         @endif
@@ -45,51 +50,50 @@
                 </div>
             </div>
 
-            @if($ticket->status === 'open' && !$ticket->assign_to)
-            <div class="alert alert-warning mb-4">
-                <h6 class="alert-heading">Tiket Belum Ditugaskan</h6>
-                <p class="mb-0">Silakan pilih handler untuk menangani tiket ini.</p>
-            </div>
+            @if ($ticket->status === 'open' && !$ticket->assign_to)
+                <div class="alert alert-warning mb-4">
+                    <h6 class="alert-heading">Tiket Belum Ditugaskan</h6>
+                    <p class="mb-0">Silakan pilih handler untuk menangani tiket ini.</p>
+                </div>
 
-            <form action="{{ route('admin.tickets.assign', $ticket) }}" method="POST" class="card bg-light mb-4">
-                <div class="card-body">
-                    <h6 class="card-title">Tugaskan ke Handler:</h6>
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <select name="handler_id" class="form-select @error('handler_id') is-invalid @enderror" required>
-                                <option value="">-- Pilih Handler --</option>
-                                @foreach($handlers as $handler)
-                                    <option value="{{ $handler->id }}">
-                                        {{ $handler->name }} ({{ $handler->email }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('handler_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-primary w-100">Tugaskan Tiket</button>
+                <form action="{{ route('admin.tickets.assign', $ticket) }}" method="POST" class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title">Tugaskan ke Handler:</h6>
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <select name="handler_id" class="form-select @error('handler_id') is-invalid @enderror"
+                                    required>
+                                    <option value="">-- Pilih Handler --</option>
+                                    @foreach ($handlers as $handler)
+                                        <option value="{{ $handler->id }}">
+                                            {{ $handler->name }} ({{ $handler->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('handler_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">Tugaskan Tiket</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
+                </form>
             @elseif($ticket->assignTo)
-            <div class="alert alert-info mb-4">
-                <h6 class="alert-heading">Informasi Handler</h6>
-                <p class="mb-0">
-                    Tiket ditangani oleh: <strong>{{ $ticket->assignTo->name }}</strong><br>
-                    Email: {{ $ticket->assignTo->email }}
-                </p>
-            </div>
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading">Informasi Handler</h6>
+                    <p class="mb-0">
+                        Tiket ditangani oleh: <strong>{{ $ticket->assignTo->name }}</strong><br>
+                        Email: {{ $ticket->assignTo->email }}
+                    </p>
+                </div>
             @endif
 
-            <div class="mt-4">
+            <div class="ticket-detail border-top pt-3">
                 <h6>Detail Masalah:</h6>
-                <div class="border rounded p-3 bg-light">
-                    {!! nl2br(e($ticket->description)) !!}
-                </div>
+                <textarea id="ticket-description" readonly>{{ $ticket->description }}</textarea>
             </div>
         </div>
     </div>
@@ -119,3 +123,21 @@
         @endforelse
     </div>
 @endsection
+@push('scripts')
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+    <script>
+        ClassicEditor
+            .create(document.querySelector('#ticket-description'), {
+                toolbar: [], // Hilangkan semua tombol
+                readOnly: true, // Non-editable
+            })
+            .then(editor => {
+                editor.enableReadOnlyMode('ticket-description');
+                // Tambahkan class img-fluid agar gambar responsive
+                document.querySelectorAll('.ck-content img').forEach(img => {
+                    img.classList.add('img-fluid');
+                });
+            })
+            .catch(error => console.error(error));
+    </script>
+@endpush
