@@ -9,6 +9,7 @@ use App\Http\Controllers\TicketUserController;
 use App\Http\Controllers\SlaController;
 use App\Http\Controllers\TicketTypeController;
 use App\Http\Controllers\Auth\WebAuthController;
+use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,6 +42,11 @@ Route::middleware(['require.login', 'must_change_password',  'role:user'])->grou
         Route::get('/{ticket}', 'show')->name('user.tickets.show');
         Route::post('/{ticket}/comments', 'addComment')->name('user.tickets.comments.store');
         Route::post('/{ticket}/rating', 'submitRating')->name('user.tickets.rating.submit');
+    });
+    Route::prefix('ckeditor')->controller(FileController::class)->group(function () {
+        Route::post('/upload', 'upload')->name('ckeditor.upload');
+        Route::post('/delete', 'delete')->name('ckeditor.delete');
+        Route::post('/finalize', 'finalize')->name('ckeditor.finalize');
     });
 });
 

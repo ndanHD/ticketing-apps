@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTicketRequest;
+use App\Models\Outlet;
 use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\Sla;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 
 class TicketUserController extends Controller
@@ -21,7 +24,7 @@ class TicketUserController extends Controller
             ->where('created_by', auth()->id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        
+
         return view('user.tickets.index', compact('tickets'));
     }
 
@@ -32,8 +35,8 @@ class TicketUserController extends Controller
     {
         $types = TicketType::where('is_active', 1)->get();
         $slas = Sla::all();
-        
-        return view('user.tickets.create', compact('types', 'slas'));
+        $outlets = Outlet::all();
+        return view('user.tickets.create', compact('types', 'slas', 'outlets'));
     }
 
     /**
@@ -42,13 +45,44 @@ class TicketUserController extends Controller
      */
     public function store(StoreTicketRequest $request)
     {
-        $data = $request->validated();
-        
-        $ticket = Ticket::create(array_merge($data, [
-            'created_by' => auth()->id(),
-            'status' => 'open'
-        ]));
+        $request->validate([
+            'ticket_type_id' => 'required|exists:tbl_ticket_types,id',
+            'sla_id'         => 'required|exists:tbl_slas,id',
+            'outlet_id'      => 'required|exists:tbl_outlets,id',
+            'title'          => 'required|string|max:100',
+            'description'    => 'required|string',
+        ]);
 
+        $description = $request->description;
+
+        // Ambil semua gambar tmp
+        preg_match_all('/<img.*?src="([^"]+)"/', $description, $matches);
+        $imageUrls = $matches[1] ?? [];
+
+        // dd($description);
+        foreach ($imageUrls as $url) {
+            $fileName = basename($url);
+
+            $tmpPath = 'tmp/' . $fileName;
+            $mediaPath = 'media/' . $fileName;
+
+            if (\Storage::disk('public')->exists($tmpPath)) {
+                // Pindahkan dari tmp ke media
+                \Storage::disk('public')->move($tmpPath, $mediaPath);
+
+                // Update URL di description
+                $description = str_replace('/storage/' . $tmpPath, '/storage/' . $mediaPath, $description);
+            }
+        }
+        $ticket = Ticket::create([
+            'ticket_type_id' => $request->ticket_type_id,
+            'sla_id'         => $request->sla_id,
+            'outlet_id'      => $request->outlet_id,
+            'title'          => $request->title,
+            'description'    => $description,
+            'created_by'     => Auth()->id(),
+
+        ]);
         return redirect()
             ->route('user.tickets.show', $ticket)
             ->with('success', 'Tiket berhasil dibuat. Tim kami akan segera merespon.');
@@ -66,10 +100,8 @@ class TicketUserController extends Controller
         }
 
         $ticket->load(['comments.user', 'ticketType', 'sla', 'createdBy', 'assignTo', 'ratings']);
-        
         // Cek apakah user sudah memberikan rating
         $hasRated = $ticket->ratings()->where('user_id', $userId)->exists();
-        
         return view('user.tickets.show', compact('ticket', 'hasRated'));
     }
 

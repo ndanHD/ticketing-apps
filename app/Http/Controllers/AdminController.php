@@ -116,7 +116,7 @@ class AdminController extends Controller
     /**
      * Update existing user
      */
-    public function usersUpdate(Request $request, User $user)
+    public function usersUpdate(Request $request, Users $user)
     {
         // Double-check protection against editing superadmin
         $roleName = $user->role?->name ?? null;
@@ -132,10 +132,10 @@ class AdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('tbl_users')->ignore($user->id)],
-            // 'password' => ['nullable', 'confirmed', 'min:6'],
             'role_id' => ['required', Rule::in($availableRoleIds)],
             'outlet_id' => ['required', 'exists:tbl_outlets,id'],
             'job_tittle' => ['required', 'string', 'max:25'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
 
         $user->name = $data['name'];
@@ -143,6 +143,7 @@ class AdminController extends Controller
         $user->role_id = $data['role_id'];
         $user->outlet_id = $data['outlet_id'];
         $user->job_tittle = $data['job_tittle'];
+        $user->is_active = $request->has('is_active');
         $user->save();
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
