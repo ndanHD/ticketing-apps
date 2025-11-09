@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserPasswordMail;
+use App\Models\Outlet;
 use App\Models\Users as User;
 use App\Models\Role;
+use App\Models\Users;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -24,7 +30,7 @@ class AdminController extends Controller
     protected function getAvailableRoles()
     {
         $user = auth()->user();
-        
+
         $roleName = $user->role?->name ?? null;
 
         if ($roleName === 'superadmin') {
@@ -50,8 +56,12 @@ class AdminController extends Controller
      */
     public function usersCreate()
     {
+        $outlets = Outlet::all();
         $availableRoles = $this->getAvailableRoles();
-        return view('admin.users.create', compact('availableRoles'));
+        return view('admin.users.create', [
+            'availableRoles' => $availableRoles,
+            'outlets' => $outlets,
+        ]);
     }
 
     /**
@@ -66,26 +76,33 @@ class AdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:tbl_users,email'],
-            'password' => ['required', 'confirmed', 'min:6'],
+            // 'password' => ['required', 'confirmed', 'min:6'],
             'role_id' => ['required', Rule::in($availableRoleIds)],
+            'outlet_id' => ['required', 'exists:tbl_outlets,id'],
+            'job_tittle' => ['required', 'string', 'max:25'],
         ]);
 
-        $user = User::create([
+        $randomPassword = Str::random(10);
+
+        $user = Users::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($randomPassword),
             'role_id' => $data['role_id'],
+            'outlet_id' => $data['outlet_id'],
+            'job_tittle' => $data['job_tittle'],
         ]);
-
+        Mail::to($user->email)->send(new UserPasswordMail($user, $randomPassword, 'new'));
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }
 
     /**
      * Show user edit form
      */
-    public function usersEdit(User $user)
+    public function usersEdit(Users $user)
     {
         // Prevent editing superadmin users
+        $outlets = Outlet::all();
         $roleName = $user->role?->name ?? null;
         if ($roleName === 'superadmin') {
             return redirect()->route('admin.users.index')
@@ -93,7 +110,7 @@ class AdminController extends Controller
         }
 
         $availableRoles = $this->getAvailableRoles();
-        return view('admin.users.edit', compact('user', 'availableRoles'));
+        return view('admin.users.edit', compact('user', 'availableRoles', 'outlets'));
     }
 
     /**
@@ -115,22 +132,37 @@ class AdminController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('tbl_users')->ignore($user->id)],
-            'password' => ['nullable', 'confirmed', 'min:6'],
+            // 'password' => ['nullable', 'confirmed', 'min:6'],
             'role_id' => ['required', Rule::in($availableRoleIds)],
+            'outlet_id' => ['required', 'exists:tbl_outlets,id'],
+            'job_tittle' => ['required', 'string', 'max:25'],
         ]);
 
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->role_id = $data['role_id'];
-        
-        if (!empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
-        }
+        $user->outlet_id = $data['outlet_id'];
+        $user->job_tittle = $data['job_tittle'];
         $user->save();
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
     }
 
+    /**
+     * reset password user
+     */
+    public function resetUserPassword(Users $user)
+    {
+        $temporaryPassword = Str::random(10);
+
+        $user->password = Hash::make($temporaryPassword);
+        $user->must_change_password = true;
+        $user->last_change_password = Carbon::now()->toDateTimeString();
+        $user->save();
+
+        Mail::to($user->email)->send(new UserPasswordMail($user, $temporaryPassword, 'reset'));
+        return back()->with('success', 'Password has been reset and emailed to the user.');
+    }
     /**
      * Delete user
      */
@@ -144,7 +176,7 @@ class AdminController extends Controller
         }
 
         // Additional safety: prevent deleting the last superadmin
-        $superadminCount = User::whereHas('role', function($query) {
+        $superadminCount = User::whereHas('role', function ($query) {
             $query->where('name', 'superadmin');
         })->count();
 

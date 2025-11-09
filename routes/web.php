@@ -71,6 +71,7 @@ Route::middleware(['require.login', 'must_change_password',  'role:admin|superad
             Route::get('users/{user}/edit', 'usersEdit')->name('admin.users.edit');
             Route::put('users/{user}', 'usersUpdate')->name('admin.users.update');
             Route::delete('users/{user}', 'usersDestroy')->name('admin.users.destroy');
+            Route::put('users/{user}/reset-password', 'resetUserPassword')->name('admin.users.reset-password');
         });
     });
 

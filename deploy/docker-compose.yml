@@ -1,6 +1,9 @@
 version: "3.9"
+<<<<<<< HEAD
 # git config --global core.autocrlf
 
+=======
+>>>>>>> c2c99ee215635d6f1b00686faa08433e52191e37
 services:
     # PHP & Laravel
     app:

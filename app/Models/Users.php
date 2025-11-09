@@ -20,7 +20,8 @@ class Users extends Authenticatable
         'id',
         'role_id',
         'name',
-        'jabatan',
+        'job_tittle',
+        'outlet_id',
         'outlet',
         'email',
         'password',
@@ -30,6 +31,11 @@ class Users extends Authenticatable
         'is_active'
     ];
 
+    protected $hidden = [
+        'password',
+        'reset_token',
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -37,9 +43,20 @@ class Users extends Authenticatable
         });
     }
 
+    /**
+     * Relasi ke role
+     */
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    /**
+     * Relasi ke outlet
+     */
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
     }
 
     /**

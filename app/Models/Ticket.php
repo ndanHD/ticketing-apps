@@ -21,7 +21,8 @@ class Ticket extends Model
         'status',
         'title',
         'description',
-        'priority'
+        'priority',
+        'deleted_by'
     ];
 
     protected static function booted()
@@ -64,5 +65,13 @@ class Ticket extends Model
     public function commentRatings()
     {
         return $this->hasMany(TicketCommentRating::class, 'ticket_id');
+    }
+
+    /**
+     * Relasi ke user yang menghapus tiket
+     */
+    public function deletedByUser()
+    {
+        return $this->belongsTo(Users::class, 'deleted_by');
     }
 }
