@@ -2,7 +2,7 @@
 
 @section('title', 'Detail Tiket #' . $ticket->id)
 
-@section('content')
+@section('conte
     <div class="container py-4">
         <div class="row justify-content-center">
             <div class="col-md-10">
@@ -144,3 +144,11 @@
             .catch(error => console.error(error));
     </script>
 @endpush
+else
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

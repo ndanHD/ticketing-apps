@@ -4,39 +4,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', '|Ticketing')</title>
+    <title>@yield('title', 'Kawano Ticketing')</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/homepage.css" rel="stylesheet">
     <style>
         body {
-            padding-top: 56px;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            padding-top: 70px;
         }
-
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background-color: #f8f9fa;
-        }
-
-        .nav-link {
-            color: #333;
-        }
-
-        .nav-link:hover {
-            color: #0d6efd;
-        }
-
-        .nav-link.active {
-            color: #0d6efd;
-            font-weight: bold;
-        }
+        .navbar { background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); }
+        .sidebar { min-height: calc(100vh - 70px); background-color: #f8f9fa; }
+        .nav-link { color: #333; }
+        .nav-link:hover { color: #0d6efd; }
+        .nav-link.active { color: #0d6efd; font-weight: bold; }
+        .site-footer { background: #f8f9fa; padding: 1.5rem 0; margin-top: 2rem; }
     </style>
     @stack('head')
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light site-nav fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url('/') }}">{{ config('app.name', 'Kawano') }}</a>
+            <a class="navbar-brand fw-bold" href="{{ route('home') }}">{{ config('app.name', 'Kawano') }}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
                 aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -173,6 +166,19 @@
                                         <i class="bi bi-people me-2"></i> Daftar User
                                     </a>
                                 </li>
+                                <!-- Outlets management for superadmin -->
+                                <li class="nav-item">
+                                    <a class="nav-link d-flex align-items-center"
+                                        href="{{ route('admin.outlets.index') }}">
+                                        <i class="bi bi-building me-2"></i> Daftar Outlet
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link d-flex align-items-center"
+                                        href="{{ route('admin.outlets.create') }}">
+                                        <i class="bi bi-plus-square me-2"></i> Tambah Outlet
+                                    </a>
+                                </li>
                             @endif
                         @endif
                     </ul>
@@ -200,6 +206,13 @@
         </div>
     </div>
     @stack('scripts')
+
+    <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1">© {{ date('Y') }} {{ config('app.name', 'Kawano Ticketing') }}</p>
+            <small class="text-muted">Simple ticketing for teams</small>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

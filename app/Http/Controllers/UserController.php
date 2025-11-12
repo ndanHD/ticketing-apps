@@ -22,6 +22,9 @@ class UserController extends Controller
            'open_tickets' => \App\Models\Ticket::where('created_by', $userId)
                ->where('status', 'open')
                ->count(),
+              'pending_tickets' => \App\Models\Ticket::where('created_by', $userId)
+               ->where('status', 'pending')
+               ->count(),
            'in_progress_tickets' => \App\Models\Ticket::where('created_by', $userId)
                ->where('status', 'in_progress')
                ->count(),
@@ -34,7 +37,13 @@ class UserController extends Controller
                ->take(5)
                ->get()
        ];
+        // chart: status breakdown for user's tickets
+        $statusCounts = \App\Models\Ticket::where('created_by', $userId)
+            ->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
        
-       return view('user.dashboard', compact('stats'));
+        return view('user.dashboard', compact('stats', 'statusCounts'));
    }
 }

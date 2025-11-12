@@ -8,6 +8,12 @@
         <div>
             <a href="{{ route('admin.tickets.index') }}" class="btn btn-outline-secondary">Kembali</a>
             <a href="{{ route('admin.tickets.edit', $ticket) }}" class="btn btn-secondary">Edit</a>
+            @if($ticket->status !== 'pending')
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pendingModal">Set Pending</button>
+            @else
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#pendingModal">Ubah Pending</button>
+                <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#adminClosePendingModal">Close Pending</button>
+            @endif
         </div>
     </div>
 
@@ -97,6 +103,68 @@
             </div>
         </div>
     </div>
+
+            <!-- Pending Modal -->
+            <div class="modal fade" id="pendingModal" tabindex="-1" aria-labelledby="pendingModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form action="{{ route('admin.tickets.update', $ticket) }}" method="POST" id="pending-form">
+                            @csrf
+                            @method('PUT')
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="pendingModalLabel">Set Tiket Pending</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" name="status" value="pending">
+
+                                <div class="mb-3">
+                                    <label for="pending_reason" class="form-label">Alasan Pending</label>
+                                    <textarea name="pending_reason" id="pending_reason" class="form-control" rows="4" required>{{ old('pending_reason', $ticket->pending_reason ?? '') }}</textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="pending_until" class="form-label">Pending Hingga</label>
+                                    <input type="date" name="pending_until" id="pending_until" class="form-control" value="{{ old('pending_until', optional($ticket->pending_until)->format('Y-m-d')) }}" required />
+                                </div>
+
+                                <div class="alert alert-secondary small">Catatan: field ini wajib diisi saat mengubah status menjadi <strong>pending</strong>.</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-warning">Simpan Pending</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+                            <!-- Admin Close Pending Modal -->
+                            <div class="modal fade" id="adminClosePendingModal" tabindex="-1" aria-labelledby="adminClosePendingModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form action="{{ route('admin.tickets.pending.close', $ticket) }}" method="POST">
+                                            @csrf
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="adminClosePendingModalLabel">Hapus Pending Tiket</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Anda akan menghapus status <strong>PENDING</strong> untuk tiket ini.</p>
+                                                <p>Setelah dihapus, status akan berubah menjadi <strong>in_progress</strong> jika tiket sudah ditugaskan ke handler, atau <strong>open</strong> jika belum ditugaskan.</p>
+                                                <div class="mb-3">
+                                                    <label for="admin_close_note" class="form-label">Catatan (opsional)</label>
+                                                    <textarea id="admin_close_note" name="note" class="form-control" rows="3" placeholder="Catatan singkat untuk riwayat..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-danger">Hapus Pending</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
 
     <h4>Komentar</h4>
     <div class="mb-3">

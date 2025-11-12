@@ -14,6 +14,7 @@ class Ticket extends Model
 
     protected $fillable = [
         'id',
+        'outlet_id',
         'ticket_type_id',
         'sla_id',
         'assign_to',
@@ -21,6 +22,8 @@ class Ticket extends Model
         'status',
         'title',
         'description',
+        'pending_reason',
+        'pending_until',
         'priority',
         'deleted_by'
     ];

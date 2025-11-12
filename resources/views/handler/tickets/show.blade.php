@@ -20,6 +20,20 @@
                             data-ticket-title="{{ $ticket->title ?? 'Tiket #' . $ticket->id }}">
                             Tutup Tiket
                         </button>
+                        @if($ticket->status !== 'pending')
+                            <button type="button" class="btn btn-warning ms-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#handlerPendingModal">
+                                Set Pending
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-warning ms-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#handlerPendingModal">
+                                Ubah Pending
+                            </button>
+                            <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#handlerClosePendingModal">Close Pending</button>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -55,7 +69,7 @@
                     
                     <div class="ticket-detail border-top pt-3">
                         <h6>Detail Masalah:</h6>
-                        <p class="mb-0">{!! nl2br(e($ticket->description)) !!}</p>
+                        <p class="mb-0"> {!! nl2br(e($ticket->description)) !!} </p>
                     </div>
                 </div>
             </div>
@@ -114,7 +128,7 @@
         <div class="modal-content">
                 <form action="{{ route('handler.tickets.close') }}" method="POST" onsubmit="return validateCloseForm(event)">
                     @csrf
-                    <input type="hidden" name="ticket_id" id="modalTicketId" value="$ticket->id">
+                    <input type="hidden" name="ticket_id" id="modalTicketId" value="{{ $ticket->id }}">
                     
                     
                     <div class="modal-header">
@@ -148,10 +162,63 @@
                         </div>
                     </div>
                 </div>
+
                 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-success">Tutup Tiket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Handler Pending Modal (moved out of close modal) -->
+<div class="modal fade" id="handlerPendingModal" tabindex="-1" aria-labelledby="handlerPendingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('handler.tickets.pending.set', $ticket) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="handlerPendingModalLabel">Set Tiket Pending</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="pending_reason_handler" class="form-label">Alasan Pending</label>
+                        <textarea id="pending_reason_handler" name="pending_reason" class="form-control" rows="4" required>{{ old('pending_reason', $ticket->pending_reason ?? '') }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pending_until_handler" class="form-label">Pending Hingga</label>
+                        <input id="pending_until_handler" type="date" name="pending_until" class="form-control" value="{{ old('pending_until', optional($ticket->pending_until)->format('Y-m-d')) }}" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning">Simpan Pending</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Handler Close Pending Modal (moved out of close modal) -->
+<div class="modal fade" id="handlerClosePendingModal" tabindex="-1" aria-labelledby="handlerClosePendingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('handler.tickets.pending.close', $ticket) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="handlerClosePendingModalLabel">Hapus Pending</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menghapus status <strong>PENDING</strong> untuk tiket ini?</p>
+                    <p>Setelah dihapus, status akan menjadi <strong>in_progress</strong>.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Hapus Pending</button>
                 </div>
             </form>
         </div>

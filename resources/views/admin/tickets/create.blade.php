@@ -52,8 +52,19 @@
         </div>
         <div class="mb-3">
             <label class="form-label">Detail</label>
-            <textarea name="detail" class="form-control" rows="6" required>{{ old('detail') }}</textarea>
+            <textarea name="description" class="form-control" rows="6" required>{{ old('description') }}</textarea>
         </div>
+        @if(!empty($outlets))
+            <div class="mb-3">
+                <label class="form-label">Outlet</label>
+                <select name="outlet_id" class="form-select">
+                    <option value="">-- Pilih Outlet (Default: Semua) --</option>
+                    @foreach($outlets as $o)
+                        <option value="{{ $o->id }}">{{ $o->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
         <button class="btn btn-primary">Simpan</button>
     </form>
 @endsection

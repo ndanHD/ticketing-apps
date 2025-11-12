@@ -21,7 +21,21 @@ class AdminController extends Controller
      */
     public function index()
     {
-        return view('admin.dashboard');
+        // Prepare datasets for charts
+        $statusCounts = \App\Models\Ticket::select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
+        $outletCounts = \App\Models\Ticket::select('tbl_outlets.name as outlet', \Illuminate\Support\Facades\DB::raw('count(tbl_tickets.id) as count'))
+            ->leftJoin('tbl_outlets', 'tbl_tickets.outlet_id', '=', 'tbl_outlets.id')
+            ->groupBy('tbl_outlets.name')
+            ->orderByDesc('count')
+            ->get()
+            ->mapWithKeys(function($r){ return [$r->outlet ?? 'Unassigned' => (int)$r->count]; })
+            ->toArray();
+
+        return view('admin.dashboard', compact('statusCounts', 'outletCounts'));
     }
 
     /**

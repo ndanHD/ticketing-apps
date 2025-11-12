@@ -24,6 +24,17 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="outlet_id" class="form-label">Pilih Outlet</label>
+                        <select name="outlet_id" id="outlet_id" class="form-select @error('outlet_id') is-invalid @enderror">
+                            <option value="">-- Pilih Outlet (Opsional) --</option>
+                            @foreach($outlets as $outlet)
+                                <option value="{{ $outlet->id }}" {{ old('outlet_id') == $outlet->id ? 'selected' : '' }}>{{ $outlet->name }}{{ $outlet->address ? ' - ' . $outlet->address : '' }}</option>
+                            @endforeach
+                        </select>
+                        @error('outlet_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required>
                         @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror

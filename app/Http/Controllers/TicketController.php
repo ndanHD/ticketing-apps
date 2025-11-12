@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\Sla;
 use App\Models\User;
+use App\Models\Outlet;
 use Illuminate\Http\Request;
 use App\Models\TicketComment;
 
@@ -19,12 +20,35 @@ class TicketController extends Controller
      */
     public function index()
     {
-        $tickets = Ticket::with(['ticketType', 'sla', 'createdBy'])
+        $user = auth()->user();
+        $selectedOutlet = null;
+
+        $query = Ticket::with(['ticketType', 'sla', 'createdBy'])
             ->withCount('ratings')
             ->withAvg('ratings', 'rating')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
-        return view('admin.tickets.index', compact('tickets'));
+            ->orderBy('created_at', 'desc');
+
+        // If the current user is an admin (not superadmin) and has an outlet assigned,
+        // only show tickets for that outlet. Superadmins can optionally filter by outlet.
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin') && ! $user->hasRole('superadmin') && ! empty($user->outlet_id)) {
+            $query->where('outlet_id', $user->outlet_id);
+            $selectedOutlet = $user->outlet;
+        } else {
+            // Superadmin: allow optional outlet filtering via query parameter
+            if (request()->filled('outlet_id')) {
+                $query->where('outlet_id', request()->get('outlet_id'));
+                $selectedOutlet = Outlet::find(request()->get('outlet_id'));
+            }
+        }
+
+        $tickets = $query->paginate(20);
+        // For superadmin, provide a list of outlets for optional filtering
+        $outlets = null;
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
+            $outlets = Outlet::orderBy('name')->get();
+        }
+
+        return view('admin.tickets.index', compact('tickets', 'outlets', 'selectedOutlet'));
     }
 
     /**
@@ -35,11 +59,16 @@ class TicketController extends Controller
         $types = TicketType::where('is_active', 1)->get();
         $slas = Sla::all();
         $users = User::orderBy('name')->get();
-        
         // Users untuk pilihan created_by dan assign_to
         $users = User::orderBy('name')->get();
-        
-        return view('admin.tickets.create', compact('types', 'slas', 'users'));
+
+        $outlets = null;
+        $user = auth()->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
+            $outlets = Outlet::orderBy('name')->get();
+        }
+
+        return view('admin.tickets.create', compact('types', 'slas', 'users', 'outlets'));
     }
 
     /**
@@ -58,6 +87,12 @@ class TicketController extends Controller
             return redirect()->back()->with('error', 'Tidak dapat membuat tiket: User ID tidak valid.');
         }
         
+        // If an admin (non-superadmin) creates the ticket, force the ticket's outlet to their outlet
+        $user = auth()->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin') && ! $user->hasRole('superadmin') && ! empty($user->outlet_id)) {
+            $data['outlet_id'] = $user->outlet_id;
+        }
+
         $ticket = Ticket::create($data);
 
         return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil dibuat.');
@@ -68,13 +103,20 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         // muat relasi yang diperlukan termasuk komentar dan pengguna pembuat
         $ticket->load(['comments.user', 'ticketType', 'sla', 'createdBy', 'assignTo']);
 
-        // Ambil daftar handler yang tersedia
-        $handlers = User::whereHas('role', function($query) {
+        // Ambil daftar handler yang tersedia — hanya handler pada outlet tiket (jika ada)
+        $handlersQuery = User::whereHas('role', function($query) {
             $query->where('name', 'handler');
-        })->orderBy('name')->get();
+        });
+
+        if (!empty($ticket->outlet_id)) {
+            $handlersQuery->where('outlet_id', $ticket->outlet_id);
+        }
+
+        $handlers = $handlersQuery->orderBy('name')->get();
 
     // Compute rating aggregates for admin view
     $ratingsCount = $ticket->ratings()->count();
@@ -88,6 +130,7 @@ class TicketController extends Controller
      */
     public function assign(Request $request, Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         $data = $request->validate([
             'handler_id' => ['required', 'exists:tbl_users,id'],
         ]);
@@ -120,6 +163,7 @@ class TicketController extends Controller
      */
     public function addComment(Request $request, Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         $data = $request->validate([
             'comment' => ['required', 'string', 'max:65535'],
         ]);
@@ -144,6 +188,7 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         $types = TicketType::where('is_active', 1)->get();
         $slas = Sla::all();
         $users = User::orderBy('name')->get();
@@ -155,9 +200,38 @@ class TicketController extends Controller
      */
     public function update(UpdateTicketRequest $request, Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         $data = $request->validated();
         $ticket->update($data);
         return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil diperbarui.');
+    }
+
+    /**
+     * Admin action to close/clear pending state on a ticket.
+     * Admin closing pending will behave like handler close: status -> in_progress if assigned, else open.
+     */
+    public function closePendingAsAdmin(Request $request, Ticket $ticket)
+    {
+        $this->ensureOutletAccess($ticket);
+
+        try {
+            $newStatus = $ticket->assign_to ? 'in_progress' : 'open';
+            $ticket->update([
+                'status' => $newStatus,
+                'pending_reason' => null,
+                'pending_until' => null,
+            ]);
+
+            $ticket->comments()->create([
+                'user_id' => auth()->id(),
+                'comment' => "Admin menghapus status PENDING. Mengubah status menjadi: {$newStatus}",
+                'is_system_comment' => true,
+            ]);
+
+            return redirect()->back()->with('success', 'Pending berhasil dihapus oleh admin.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus pending.');
+        }
     }
 
     /**
@@ -165,7 +239,21 @@ class TicketController extends Controller
      */
     public function destroy(Ticket $ticket)
     {
+        $this->ensureOutletAccess($ticket);
         $ticket->delete();
         return redirect()->route('admin.tickets.index')->with('success', 'Tiket berhasil dihapus.');
+    }
+
+    /**
+     * Ensure that admin users can only access tickets that belong to their outlet.
+     */
+    protected function ensureOutletAccess(Ticket $ticket)
+    {
+        $user = auth()->user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin') && ! $user->hasRole('superadmin') && !empty($user->outlet_id)) {
+            if ((string)$ticket->outlet_id !== (string)$user->outlet_id) {
+                abort(403, 'Unauthorized access to ticket for different outlet.');
+            }
+        }
     }
 }

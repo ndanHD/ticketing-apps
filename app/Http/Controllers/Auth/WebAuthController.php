@@ -102,7 +102,8 @@ class WebAuthController extends Controller
      */
     public function showRegister()
     {
-        return view('auth.register');
+        $outlets = \App\Models\Outlet::orderBy('name')->get();
+        return view('auth.register', compact('outlets'));
     }
 
     /**
@@ -112,8 +113,9 @@ class WebAuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'confirmed']
+            'email' => ['required', 'email', 'max:255', 'unique:tbl_users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'outlet_id' => ['nullable', 'exists:tbl_outlets,id'],
         ]);
 
         // Get the default user role
@@ -128,11 +130,13 @@ class WebAuthController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'is_active' => true,
-            'role_id' => $defaultRole->id
+            'role_id' => $defaultRole->id,
+            'outlet_id' => $data['outlet_id'] ?? null,
+            'job_tittle' => 'Customer'
         ]);
 
         Auth::login($user);
-        return redirect()->route('admin.dashboard')->with('success', 'Registrasi berhasil. Selamat datang!');
+        return redirect()->route('user.dashboard')->with('success', 'Registrasi berhasil. Selamat datang!');
     }
 
     /**
@@ -143,6 +147,6 @@ class WebAuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/')->with('success', 'Anda berhasil logout');
+        return redirect('/login')->with('success', 'Anda berhasil logout');
     }
 }

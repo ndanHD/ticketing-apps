@@ -23,9 +23,11 @@ class RedirectIfAuthenticated
                 $user = Auth::guard($guard)->user();
                 
                 // Redirect berdasarkan role user
-                if ($user->role?->name === 'admin|superadmin') {
+                $roleName = $user->role?->name ?? null;
+
+                if ($roleName === 'superadmin' || $roleName === 'admin') {
                     return redirect()->route('admin.dashboard');
-                } elseif ($user->role?->name === 'handler') {
+                } elseif ($roleName === 'handler' || str_contains($roleName ?? '', 'handler')) {
                     return redirect()->route('handler.dashboard');
                 } else {
                     return redirect()->route('user.dashboard');

@@ -1,35 +1,95 @@
-@extends('template.layout')
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kawano Ticketing - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero {
+            background: linear-gradient(90deg, #0d6efd66, #6f42c166);
+            color: #fff;
+            padding: 4rem 0 6rem;
+        }
+        .login-card { max-width: 420px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ route('home') }}">Kawano Ticketing</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-@section('title', 'Login')
-
-@section('content')
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">Login</div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('login.post') }}">
-                    @csrf
-
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autofocus>
-                        @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required>
-                        @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ route('register.show') }}">Belum punya akun? Daftar</a>
-                        <button type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                </form>
-            </div>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav ms-auto">
+                @guest
+                    <li class="nav-item"><a class="nav-link" href="{{ route('login.show') }}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('register.show') }}">Register</a></li>
+                @else
+                    @php
+                        $roleName = auth()->user()->role?->name ?? null;
+                        if ($roleName === 'superadmin' || $roleName === 'admin') {
+                            $dash = route('admin.dashboard');
+                        } elseif (str_contains($roleName ?? '', 'handler')) {
+                            $dash = route('handler.dashboard');
+                        } else {
+                            $dash = route('user.dashboard');
+                        }
+                    @endphp
+                    <li class="nav-item"><a class="nav-link" href="{{ $dash }}">Dashboard</a></li>
+                @endguest
+            </ul>
         </div>
     </div>
-</div>
-@endsection
+</nav>
+
+<header class="hero text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold">Welcome back to Kawano Ticketing</h1>
+        <p class="lead mb-4">Sign in to continue managing and tracking tickets.</p>
+    </div>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <div class="login-card">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Login</h5>
+
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login.post') }}">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autofocus>
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required>
+                            @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ route('register.show') }}">Belum punya akun? Daftar</a>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <p class="text-center text-muted mt-3">© {{ date('Y') }} Kawano Ticketing</p>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

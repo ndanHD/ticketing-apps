@@ -23,6 +23,7 @@ class StoreTicketRequest extends FormRequest
         return [
             'ticket_type_id' => ['required', 'uuid', 'exists:tbl_ticket_types,id'],
             'sla_id' => ['required', 'uuid', 'exists:tbl_slas,id'],
+            'outlet_id' => ['nullable', 'uuid', 'exists:tbl_outlets,id'],
             'assign_to' => ['nullable', 'uuid', 'exists:tbl_users,id'],
             'created_by' => ['nullable', 'uuid', 'exists:tbl_users,id'],
             'title' => ['required', 'string', 'max:255'],

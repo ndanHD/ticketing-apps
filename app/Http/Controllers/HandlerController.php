@@ -28,12 +28,20 @@ class HandlerController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
-        
+
+        // Chart data: status breakdown for assigned tickets
+        $statusCounts = Ticket::where('assign_to', $user->id)
+            ->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
         return view('handler.dashboard', compact(
             'totalTickets', 
             'resolvedTickets', 
             'openTickets', 
-            'recentTickets'
+            'recentTickets',
+            'statusCounts'
         ));
     }
 
@@ -138,6 +146,77 @@ class HandlerController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Terjadi kesalahan saat menutup tiket. Silakan coba lagi.');
+        }
+    }
+
+    /**
+     * Set ticket to pending by handler assigned to it.
+     */
+    public function setPending(Request $request, Ticket $ticket)
+    {
+        // Ensure the handler is assigned to this ticket
+        if ($ticket->assign_to !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke tiket ini.');
+        }
+
+        $data = $request->validate([
+            'pending_reason' => ['required', 'string', 'max:65535'],
+            'pending_until' => ['required', 'date', 'after_or_equal:today'],
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ticket->update([
+                'status' => 'pending',
+                'pending_reason' => $data['pending_reason'],
+                'pending_until' => $data['pending_until'],
+            ]);
+
+            // Add system comment
+            $ticket->comments()->create([
+                'user_id' => auth()->id(),
+                'comment' => "Menandai tiket sebagai PENDING: {$data['pending_reason']} (sampai {$data['pending_until']})",
+                'is_system_comment' => true,
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Tiket berhasil di-set sebagai pending.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal set pending tiket.');
+        }
+    }
+
+    /**
+     * Close/Clear pending state (handler action).
+     * If ticket has an assigned handler, set status to in_progress; otherwise set to open.
+     */
+    public function closePending(Request $request, Ticket $ticket)
+    {
+        if ($ticket->assign_to !== auth()->id()) {
+            abort(403, 'Anda tidak memiliki akses ke tiket ini.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $newStatus = $ticket->assign_to ? 'in_progress' : 'open';
+            $ticket->update([
+                'status' => $newStatus,
+                'pending_reason' => null,
+                'pending_until' => null,
+            ]);
+
+            $ticket->comments()->create([
+                'user_id' => auth()->id(),
+                'comment' => "Menghapus status PENDING. Mengubah status menjadi: {$newStatus}",
+                'is_system_comment' => true,
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Pending berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menghapus pending.');
         }
     }
 }

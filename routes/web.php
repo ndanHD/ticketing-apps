@@ -12,9 +12,14 @@ use App\Http\Controllers\Auth\WebAuthController;
 use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
+// Route::get('/', function () {
+//     return view('auth.login');
+// })->name('login');
+
+// // Public homepage about the product
 Route::get('/', function () {
-    return view('auth.login');
-})->name('login');
+    return view('homepage');
+})->name('home');
 
 Route::get('/password/change', [WebAuthController::class, 'showChangePassword'])->name('password.change')->middleware('auth');
 Route::post('/password/change', [WebAuthController::class, 'changePassword'])->name('password.change.submit')->middleware('auth');
@@ -57,6 +62,10 @@ Route::middleware(['require.login', 'must_change_password',  'role:handler'])->p
     Route::get('tickets/{ticket}', [HandlerController::class, 'show'])->name('handler.tickets.show');
     Route::post('tickets/close', [HandlerController::class, 'closeTicket'])->name('handler.tickets.close');
     Route::post('tickets/{ticket}/comments', [HandlerController::class, 'addComment'])->name('handler.tickets.comments.store');
+    // Allow handlers to set ticket to pending
+    Route::post('tickets/{ticket}/pending', [HandlerController::class, 'setPending'])->name('handler.tickets.pending.set');
+    // Allow handler to close/clear pending state
+    Route::post('tickets/{ticket}/pending/close', [HandlerController::class, 'closePending'])->name('handler.tickets.pending.close');
 });
 
 // Admin area - protected by admin and superadmin roles
@@ -106,8 +115,16 @@ Route::middleware(['require.login', 'must_change_password',  'role:admin|superad
         Route::get('/{ticket}', 'show')->name('admin.tickets.show');
         Route::post('/{ticket}/comments', 'addComment')->name('admin.tickets.comments.store');
         Route::post('/{ticket}/assign', 'assign')->name('admin.tickets.assign');
+    Route::post('/{ticket}/pending/close', 'closePendingAsAdmin')->name('admin.tickets.pending.close');
         Route::get('/{ticket}/edit', 'edit')->name('admin.tickets.edit');
         Route::put('/{ticket}', 'update')->name('admin.tickets.update');
         Route::delete('/{ticket}', 'destroy')->name('admin.tickets.destroy');
+    });
+
+    // Outlets management (only superadmin)
+    Route::controller(\App\Http\Controllers\OutletController::class)->middleware('role:superadmin')->group(function () {
+        Route::get('outlets', 'index')->name('admin.outlets.index');
+        Route::get('outlets/create', 'create')->name('admin.outlets.create');
+        Route::post('outlets', 'store')->name('admin.outlets.store');
     });
 });

@@ -47,10 +47,71 @@
                 <option value="closed" {{ $ticket->status == 'closed' ? 'selected' : '' }}>Closed</option>
             </select>
         </div>
+        <div id="pending-fields" class="mb-3" style="display: none;">
+            <label class="form-label">Alasan Pending</label>
+            <textarea name="pending_reason" class="form-control" rows="4">{{ old('pending_reason', $ticket->pending_reason ?? '') }}</textarea>
+        </div>
+        <div id="pending-until-field" class="mb-3" style="display: none;">
+            <label class="form-label">Pending Hingga</label>
+            @php
+                $pendingUntilVal = old('pending_until', $ticket->pending_until ?? null);
+                if ($pendingUntilVal) {
+                    try {
+                        $pendingUntilVal = \Carbon\Carbon::parse($pendingUntilVal)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        // keep original if parse fails
+                    }
+                }
+            @endphp
+            <input type="date" name="pending_until" class="form-control" value="{{ $pendingUntilVal }}" />
+        </div>
         <div class="mb-3">
             <label class="form-label">Detail</label>
             <textarea name="detail" class="form-control" rows="6" required>{{ old('detail', $ticket->detail) }}</textarea>
         </div>
         <button class="btn btn-primary">Simpan</button>
     </form>
+    
+    @php
+        $isAdmin = optional(optional(auth()->user())->role)->name === 'admin';
+    @endphp
+
+    @push('scripts')
+    <script>
+        (function(){
+            const statusEl = document.querySelector('select[name="status"]');
+            const pendingFields = document.getElementById('pending-fields');
+            const pendingUntil = document.getElementById('pending-until-field');
+            const isAdmin = @json($isAdmin);
+            function togglePending() {
+                const val = statusEl.value;
+                if (val === 'pending') {
+                    pendingFields.style.display = '';
+                    pendingUntil.style.display = '';
+                    // if admin, set required on inputs
+                    if (isAdmin) {
+                        const pr = document.querySelector('textarea[name="pending_reason"]');
+                        const pu = document.querySelector('input[name="pending_until"]');
+                        if (pr) pr.setAttribute('required','required');
+                        if (pu) pu.setAttribute('required','required');
+                    }
+                } else {
+                    pendingFields.style.display = 'none';
+                    pendingUntil.style.display = 'none';
+                    try {
+                        const pr = document.querySelector('textarea[name="pending_reason"]');
+                        const pu = document.querySelector('input[name="pending_until"]');
+                        if (pr) pr.removeAttribute('required');
+                        if (pu) pu.removeAttribute('required');
+                    } catch(e){}
+                }
+            }
+            if (statusEl) {
+                statusEl.addEventListener('change', togglePending);
+                // initial
+                togglePending();
+            }
+        })();
+    </script>
+    @endpush
 @endsection
