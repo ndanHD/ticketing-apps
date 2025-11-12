@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
@@ -59,10 +60,65 @@ class AdminController extends Controller
     /**
      * Display list of users
      */
-    public function usersIndex()
+    public function usersIndex(Request $request)
     {
-        $users = User::with('role')->orderBy('id', 'desc')->paginate(15);
-        return view('admin.users.index', compact('users'));
+        // Jika request dari DataTable (check both ajax() dan draw parameter)
+        if ($request->ajax() || $request->has('draw')) {
+            return $this->getUsersDataTable($request);
+        }
+
+        return view('admin.users.index');
+    }
+
+    /**
+     * Ambil data user untuk DataTable
+     */
+    private function getUsersDataTable(Request $request)
+    {
+        $query = User::with('role')->where('role_id', '!=', null);
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('id_short', function ($user) {
+                return substr($user->id, 0, 8);
+            })
+            ->addColumn('name', function ($user) {
+                return $user->name;
+            })
+            ->addColumn('email', function ($user) {
+                return $user->email;
+            })
+            ->addColumn('job_title', function ($user) {
+                return $user->job_tittle ?? '-';
+            })
+            ->addColumn('role', function ($user) {
+                return $user->role->name ?? '-';
+            })
+            ->addColumn('created_at', function ($user) {
+                return $user->created_at->format('d/m/Y H:i');
+            })
+            ->addColumn('status', function ($user) {
+                $badge = $user->is_active ? 'success' : 'danger';
+                $text = $user->is_active ? 'Active' : 'Non Active';
+                return '<span class="badge bg-' . $badge . '">' . $text . '</span>';
+            })
+            ->addColumn('actions', function ($user) {
+                if ($user->role && $user->role->name === 'superadmin') {
+                    return '<span class="badge bg-secondary">Superadmin</span>';
+                }
+
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . route('admin.users.edit', $user) . '" class="btn btn-sm btn-info"><i class="bi bi-pencil"></i> Edit</a>';
+                $actions .= '<form action="' . route('admin.users.destroy', $user) . '" method="POST" class="d-inline swal-delete" data-name="' . $user->name . '">';
+                $actions .= csrf_field() . method_field('DELETE');
+                $actions .= '<button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Hapus</button>';
+                $actions .= '</form>';
+                $actions .= '</div>';
+
+                return $actions;
+            })
+            ->rawColumns(['status', 'actions'])
+            ->make(true);
     }
 
     /**

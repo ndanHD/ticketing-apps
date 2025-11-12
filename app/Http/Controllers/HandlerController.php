@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\Users;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 
 class HandlerController extends Controller
 {
@@ -50,20 +51,68 @@ class HandlerController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        // Jika request dari DataTable (check both ajax() dan draw parameter)
+        if ($request->ajax() || $request->has('draw')) {
+            return $this->getHandlerTicketsDataTable($request);
+        }
 
-        // Ambil semua tiket yang ditugaskan ke user ini
-        $tickets = Ticket::where('assign_to', $user->id)
-            ->with(['ticketType', 'createdBy'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $user = auth()->user();
 
         // Hitung tiket baru dalam 24 jam terakhir sebagai indikator notifikasi
         $newCount = Ticket::where('assign_to', $user->id)
             ->where('created_at', '>=', now()->subDay())
             ->count();
 
-        return view('handler.tickets.index', compact('tickets', 'newCount'));
+        return view('handler.tickets.index', compact('newCount'));
+    }
+
+    /**
+     * Ambil data tiket handler untuk DataTable
+     */
+    private function getHandlerTicketsDataTable(Request $request)
+    {
+        $user = auth()->user();
+
+        // Build query for tickets assigned to this handler
+        $query = Ticket::where('assign_to', $user->id)
+            ->with(['ticketType', 'createdBy']);
+
+        // Filter by status from DataTable
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        return DataTables::of($query->orderBy('created_at', 'desc'))
+            ->addIndexColumn()
+            ->addColumn('ticket_id', function ($ticket) {
+                return $ticket->id;
+            })
+            ->addColumn('type', function ($ticket) {
+                return $ticket->ticketType->name ?? '-';
+            })
+            ->addColumn('status', function ($ticket) {
+                $badge = $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning');
+                return '<span class="badge bg-' . $badge . '">' . $ticket->status . '</span>';
+            })
+            ->addColumn('created_by', function ($ticket) {
+                return $ticket->createdBy->name ?? '-';
+            })
+            ->addColumn('created_at', function ($ticket) {
+                return $ticket->created_at->format('Y-m-d H:i');
+            })
+            ->addColumn('actions', function ($ticket) {
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . route('handler.tickets.show', $ticket) . '" class="btn btn-sm btn-info">Lihat</a>';
+                
+                if ($ticket->status !== 'closed') {
+                    $actions .= '<button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#closeTicketModal" data-ticket-id="' . $ticket->id . '" data-ticket-title="' . ($ticket->title ?? 'Tiket #' . $ticket->id) . '">Tutup Tiket</button>';
+                }
+                
+                $actions .= '</div>';
+                return $actions;
+            })
+            ->rawColumns(['status', 'actions'])
+            ->make(true);
     }
 
     /**

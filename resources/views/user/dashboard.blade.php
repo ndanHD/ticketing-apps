@@ -127,6 +127,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Inisialisasi Chart.js untuk statistik tiket
     var canvas = document.getElementById('ticketStatusChart');
     if (!canvas) {
         console.error('Canvas #ticketStatusChart tidak ditemukan');

@@ -11,6 +11,7 @@ use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 
 class TicketUserController extends Controller
 {
@@ -18,14 +19,72 @@ class TicketUserController extends Controller
      * Tampilkan daftar tiket pengguna.
      * Hanya menampilkan tiket yang dibuat oleh user yang sedang login.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Ticket::with(['ticketType', 'sla'])
-            ->where('created_by', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Jika request dari DataTable (check both ajax() dan draw parameter)
+        if ($request->ajax() || $request->has('draw')) {
+            return $this->getUserTicketsDataTable($request);
+        }
 
-        return view('user.tickets.index', compact('tickets'));
+        return view('user.tickets.index');
+    }
+
+    /**
+     * Ambil data tiket user untuk DataTable
+     */
+    private function getUserTicketsDataTable(Request $request)
+    {
+        $query = Ticket::with(['ticketType', 'sla'])
+            ->where('created_by', auth()->id());
+
+        // Filter by status from DataTable
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        return DataTables::of($query->orderBy('created_at', 'desc'))
+            ->addIndexColumn()
+            ->addColumn('ticket_id', function ($ticket) {
+                return $ticket->id;
+            })
+            ->addColumn('type', function ($ticket) {
+                return $ticket->ticketType->name ?? '-';
+            })
+            ->addColumn('title', function ($ticket) {
+                return \Str::limit($ticket->title, 40);
+            })
+            ->addColumn('status', function ($ticket) {
+                $badge = $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning');
+                return '<span class="badge bg-' . $badge . '">' . $ticket->status . '</span>';
+            })
+            ->addColumn('created_at', function ($ticket) {
+                return $ticket->created_at->format('d/m/Y H:i');
+            })
+            ->addColumn('actions', function ($ticket) {
+                return '<a href="' . route('user.tickets.show', $ticket) . '" class="btn btn-sm btn-info">Lihat</a>';
+            })
+            // Add a server-side global search that also searches related fields
+            ->filter(function ($query) use ($request) {
+                $search = $request->input('search.value') ?? null;
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('id', 'like', "%{$search}%")
+                            ->orWhere('title', 'like', "%{$search}%")
+                            ->orWhere('status', 'like', "%{$search}%")
+                            ->orWhere('created_at', 'like', "%{$search}%")  // Search by date
+                            ->orWhereHas('ticketType', function ($q2) use ($search) {
+                                $q2->where('name', 'like', "%{$search}%");
+                            })
+                            
+                            ->orWhereHas('assignTo', function ($q2) use ($search) {
+                                $q2->where('name', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%");
+                            });
+                    });
+                }
+            }, true)
+            ->rawColumns(['status', 'actions'])
+            ->make(true);
     }
 
     /**

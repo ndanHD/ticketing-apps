@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Outlet;
 use Illuminate\Http\Request;
 use App\Models\TicketComment;
+use Yajra\DataTables\Facades\DataTables;
 
 class TicketController extends Controller
 {
@@ -18,37 +19,126 @@ class TicketController extends Controller
      * Tampilkan daftar tiket (halaman admin).
      * Komentar: menampilkan semua tiket dengan paginate.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $user = auth()->user();
-        $selectedOutlet = null;
-
-        $query = Ticket::with(['ticketType', 'sla', 'createdBy'])
-            ->withCount('ratings')
-            ->withAvg('ratings', 'rating')
-            ->orderBy('created_at', 'desc');
-
-        // If the current user is an admin (not superadmin) and has an outlet assigned,
-        // only show tickets for that outlet. Superadmins can optionally filter by outlet.
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin') && ! $user->hasRole('superadmin') && ! empty($user->outlet_id)) {
-            $query->where('outlet_id', $user->outlet_id);
-            $selectedOutlet = $user->outlet;
-        } else {
-            // Superadmin: allow optional outlet filtering via query parameter
-            if (request()->filled('outlet_id')) {
-                $query->where('outlet_id', request()->get('outlet_id'));
-                $selectedOutlet = Outlet::find(request()->get('outlet_id'));
-            }
+        // Jika request dari DataTable (check both ajax() dan draw parameter)
+        if ($request->ajax() || $request->has('draw')) {
+            return $this->getTicketsDataTable($request);
         }
 
-        $tickets = $query->paginate(20);
+        $user = auth()->user();
+        
         // For superadmin, provide a list of outlets for optional filtering
         $outlets = null;
         if ($user && method_exists($user, 'hasRole') && $user->hasRole('superadmin')) {
             $outlets = Outlet::orderBy('name')->get();
         }
 
-        return view('admin.tickets.index', compact('tickets', 'outlets', 'selectedOutlet'));
+        return view('admin.tickets.index', compact('outlets'));
+    }
+
+    /**
+     * Ambil data tiket untuk DataTable
+     */
+    private function getTicketsDataTable(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = Ticket::with(['ticketType', 'sla', 'createdBy', 'assignTo'])
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating');
+
+        // If the current user is an admin (not superadmin) and has an outlet assigned,
+        // only show tickets for that outlet. Superadmins can optionally filter by outlet.
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('admin') && ! $user->hasRole('superadmin') && ! empty($user->outlet_id)) {
+            $query->where('outlet_id', $user->outlet_id);
+        } else {
+            // Superadmin: allow optional outlet filtering via query parameter
+            if ($request->filled('outlet_id')) {
+                $query->where('outlet_id', $request->get('outlet_id'));
+            }
+        }
+
+        // Filter by status from DataTable search
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        // Filter by priority from DataTable search
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->get('priority'));
+        }
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('ticket_id', function ($ticket) {
+                return $ticket->id;
+            })
+            ->addColumn('title', function ($ticket) {
+                return \Str::limit($ticket->title, 30);
+            })
+            ->addColumn('type', function ($ticket) {
+                return $ticket->ticketType->name ?? '-';
+            })
+            ->addColumn('rating', function ($ticket) {
+                $avg = $ticket->ratings_avg_rating ?? null;
+                $count = $ticket->ratings_count ?? 0;
+                if ($avg) {
+                    return '<div class="text-warning">★ ' . number_format($avg, 1) . ' (' . $count . ')</div>';
+                }
+                return '-';
+            })
+            ->addColumn('status', function ($ticket) {
+                $badge = $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning');
+                return '<span class="badge bg-' . $badge . '">' . $ticket->status . '</span>';
+            })
+            ->addColumn('priority', function ($ticket) {
+                $badge = $ticket->priority === 'high' ? 'danger' : ($ticket->priority === 'medium' ? 'warning' : 'info');
+                return '<span class="badge bg-' . $badge . '">' . $ticket->priority . '</span>';
+            })
+            ->addColumn('created_by', function ($ticket) {
+                return $ticket->createdBy->name ?? '-';
+            })
+            ->addColumn('pending_reason', function ($ticket) {
+                if ($ticket->status === 'pending') {
+                    return $ticket->pending_reason ?? '-';
+                }
+                return '-';
+            })
+            ->addColumn('pending_until', function ($ticket) {
+                if ($ticket->status === 'pending' && $ticket->pending_until) {
+                    return \Carbon\Carbon::parse($ticket->pending_until)->format('d/m/Y');
+                }
+                return '-';
+            })
+            ->addColumn('assign_to', function ($ticket) {
+                if ($ticket->assignTo) {
+                    return $ticket->assignTo->name;
+                }
+                return '<span class="badge bg-warning">Belum Ditugaskan</span>';
+            })
+            ->addColumn('created_at', function ($ticket) {
+                return $ticket->created_at->format('d/m/Y H:i');
+            })
+            ->addColumn('actions', function ($ticket) {
+                $actions = '<div class="btn-group" role="group">';
+                $actions .= '<a href="' . route('admin.tickets.show', $ticket) . '" class="btn btn-sm btn-info">Lihat</a>';
+                
+                if (!$ticket->assign_to && $ticket->status === 'open') {
+                    $actions .= '<a href="' . route('admin.tickets.show', $ticket) . '#assign" class="btn btn-sm btn-warning">Tugaskan</a>';
+                }
+                
+                $actions .= '<a href="' . route('admin.tickets.edit', $ticket) . '" class="btn btn-sm btn-secondary">Edit</a>';
+                $actions .= '<form action="' . route('admin.tickets.destroy', $ticket) . '" method="POST" class="d-inline swal-delete" data-name="' . $ticket->id . '">';
+                $actions .= csrf_field() . method_field('DELETE');
+                $actions .= '<button class="btn btn-sm btn-danger">Hapus</button>';
+                $actions .= '</form>';
+                $actions .= '</div>';
+                
+                return $actions;
+            })
+            ->rawColumns(['rating', 'status', 'priority', 'assign_to', 'actions'])
+            ->make(true);
     }
 
     /**

@@ -3,125 +3,177 @@
 @section('title', 'Daftar Tiket')
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Daftar Tiket</h1>
-        <a href="{{ route('admin.tickets.create') }}" class="btn btn-primary">Buat Tiket</a>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Daftar Tiket</h1>
+    <a href="{{ route('admin.tickets.create') }}" class="btn btn-primary">Buat Tiket</a>
+</div>
 
-    @if(!empty($selectedOutlet))
-        <div class="alert alert-info">Menampilkan tiket untuk outlet: <strong>{{ $selectedOutlet->name }}</strong></div>
-    @elseif(!empty($outlets))
-        <form method="GET" class="mb-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <label for="outlet_id" class="col-form-label">Filter outlet:</label>
-                </div>
-                <div class="col-auto">
-                    <select name="outlet_id" id="outlet_id" class="form-select">
+    <!-- Filter Section -->
+    <div class="card mb-4 shadow-sm" @if(empty($outlets)) style="display: none;" @endif>
+        <div class="card-body">
+            <div class="row g-3">
+                @if(!empty($outlets))
+                <div class="col-md-3">
+                    <label for="outlet_id" class="form-label">Pilih Outlet</label>
+                    <select class="form-select form-select-sm" id="outlet_id" name="outlet_id">
                         <option value="">Semua Outlet</option>
-                        @foreach($outlets as $o)
-                            <option value="{{ $o->id }}" {{ request()->get('outlet_id') == $o->id ? 'selected' : '' }}>{{ $o->name }}</option>
+                        @foreach($outlets as $outlet)
+                        <option value="{{ $outlet->id }}">{{ $outlet->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-auto">
-                    <button class="btn btn-sm btn-outline-primary">Terapkan</button>
-                </div>
+                @endif
             </div>
-        </form>
-    @endif
+        </div>
+    </div><!-- DataTable -->
+<div class="table-responsive">
+    <table id="ticketsTable" class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Judul</th>
+                <th>Tipe</th>
+                <th>Rating</th>
+                <th>Status</th>
+                <th>Prioritas</th>
+                <th>Dibuat Oleh</th>
+                <th>Alasan Pending</th>
+                <th>Pending Hingga</th>
+                <th>Assign to</th>
+                <th>Tanggal</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Judul</th>
-                    <th>Tipe</th>
-                    <th>Rating</th>
-                    <th>Status</th>
-                    <th>Prioritas</th>
-                    <th>Dibuat Oleh</th>
-                    <th>Alasan Pending</th>
-                    <th>Pending Hingga</th>
-                    <th>Assign to</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($tickets as $ticket)
-                    <tr>
-                        <td>{{ $ticket->id }}</td>
-                        <td>{{ Str::limit($ticket->title, 30) }}</td>
-                        <td>{{ $ticket->ticketType->name ?? '-' }}</td>
-                        <td>
-                            @php
-                                $avg = $ticket->ratings_avg_rating ?? null;
-                                $count = $ticket->ratings_count ?? 0;
-                            @endphp
-                            @include('components.star-rating', ['rating' => $avg, 'count' => $count])
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ $ticket->status === 'open' ? 'success' : ($ticket->status === 'closed' ? 'secondary' : 'warning') }}">
-                                {{ $ticket->status }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ $ticket->priority === 'high' ? 'danger' : ($ticket->priority === 'medium' ? 'warning' : 'info') }}">
-                                {{ $ticket->priority }}
-                            </span>
-                        </td>
-                        <td>{{ $ticket->createdBy->name ?? '-' }}</td>
-                                                <td>
-                            @if($ticket->status === 'pending')
-                                {{ $ticket->pending_reason ?? '-' }}
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>
-                            @if($ticket->status === 'pending')
-                                @if($ticket->pending_until)
-                                    {{ \Carbon\Carbon::parse($ticket->pending_until)->format('d/m/Y') }}
-                                @else
-                                    -
-                                @endif
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td>
-                            @if($ticket->assignTo)
-                                {{ $ticket->assignTo->name }}
-                            @else
-                                <span class="badge bg-warning">Belum Ditugaskan</span>
-                            @endif
-                        </td>
-                        <td>{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{{ route('admin.tickets.show', $ticket) }}" class="btn btn-sm btn-info">Lihat</a>
-                                @if(!$ticket->assign_to && $ticket->status === 'open')
-                                    <a href="{{ route('admin.tickets.show', $ticket) }}#assign" class="btn btn-sm btn-warning">Tugaskan</a>
-                                @endif
-                                <a href="{{ route('admin.tickets.edit', $ticket) }}" class="btn btn-sm btn-secondary">Edit</a>
-                                <form action="{{ route('admin.tickets.destroy', $ticket) }}" method="POST" class="d-inline swal-delete" data-name="{{ $ticket->id }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">Hapus</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="12">Tidak ada tiket.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    let table;
 
-    {{ $tickets->links() }}
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing DataTable...');
+        table = $('#ticketsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: {
+                url: "{{ route('admin.tickets.index') }}",
+                type: 'GET',
+                data: function(d) {
+                    d.outlet_id = $('#outlet_id').val();
+                    d.status = $('#status_filter').val();
+                    d.priority = $('#priority_filter').val();
+                    console.log('Sending filter data:', d);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading data:', status, error, xhr.responseText);
+                }
+            },
+            columns: [{
+                    data: 'ticket_id',
+                    name: 'id'
+                },
+                {
+                    data: 'title',
+                    name: 'title'
+                },
+                {
+                    data: 'type',
+                    name: 'ticket_type_id'
+                },
+                {
+                    data: 'rating',
+                    name: 'rating',
+                    orderable: false
+                },
+                {
+                    data: 'status',
+                    name: 'status'
+                },
+                {
+                    data: 'priority',
+                    name: 'priority'
+                },
+                {
+                    data: 'created_by',
+                    name: 'created_by'
+                },
+                {
+                    data: 'pending_reason',
+                    name: 'pending_reason',
+                    orderable: false
+                },
+                {
+                    data: 'pending_until',
+                    name: 'pending_until'
+                },
+                {
+                    data: 'assign_to',
+                    name: 'assign_to',
+                    orderable: false
+                },
+                {
+                    data: 'created_at',
+                    name: 'created_at'
+                },
+                {
+                    data: 'actions',
+                    name: 'actions',
+                    orderable: false,
+                    searchable: false
+                }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            },
+            pageLength: 20,
+            lengthMenu: [10, 20, 50, 100],
+            dom: '<"row"<"col-md-6"l><"col-md-6"f>>rtip'
+        });
+
+        // Event listeners for filters
+        $('#outlet_id, #status_filter, #priority_filter').on('change', function() {
+            table.draw();
+        });
+
+        // Handle delete with SweetAlert
+        $(document).on('submit', '.swal-delete', function(e) {
+            e.preventDefault();
+            const form = this;
+            const ticketId = $(form).data('name');
+
+            Swal.fire({
+                title: 'Hapus Tiket?',
+                text: 'Tiket #' + ticketId + ' akan dihapus secara permanen',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+
+    function reloadTable() {
+        table.draw();
+    }
+
+    function resetFilters() {
+        document.getElementById('outlet_id')?.querySelectorAll('option')[0]?.selected || $('#outlet_id').val('');
+        $('#status_filter').val('');
+        $('#priority_filter').val('');
+        table.draw();
+    }
+</script>
+@endpush
 @endsection

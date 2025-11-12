@@ -11,6 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/css/homepage.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
@@ -215,6 +216,40 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script>
+        // Initialize Choices.js on all <select> elements in admin layout to make options searchable by default.
+        // Add attribute `data-no-search` on a <select> to opt-out.
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                document.querySelectorAll('select').forEach(function (el) {
+                    if (el.hasAttribute('data-no-search')) return;
+                    if (el.dataset.choicesInitialized) return;
+
+                    var opts = {
+                        searchEnabled: true,
+                        shouldSort: false,
+                        itemSelectText: '',
+                        searchFloor: 1,
+                    };
+
+                    if (el.multiple) {
+                        opts.removeItemButton = true;
+                    }
+
+                    try {
+                        new Choices(el, opts);
+                        el.dataset.choicesInitialized = '1';
+                    } catch (e) {
+                        console.warn('Choices init failed for select', el, e);
+                    }
+                });
+            } catch (e) {
+                console.error('Choices init error', e);
+            }
+        });
+    </script>
     <script>
         // Pass server-side flash/errors to the client for admin.js to consume
         window.Laravel = <?php echo json_encode(

@@ -11,61 +11,83 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table id="usersTable" class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>ID</th>
                     <th>Nama</th>
                     <th>Email</th>
                     <th>Jabatan</th>
                     <th>Role</th>
-                    <th>Created at</th>
+                    <th>Tanggal Dibuat</th>
                     <th>Status</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse($users as $user)
-                    <tr>
-                        <td>{{ substr($user->id, 0, 8) }}</td>
-                        <td>{{ $user->name }}</td>
-                        <td>{{ $user->email }}</td>
-                        <td>{{ $user->job_tittle }}</td>
-                        <td>{{ $user->role->name }}</td>
-                        <td>{{ $user->created_at->format('Y-m-d H:i') }}</td>
-                        <td>
-                            <span class="badge bg-{{ $user->is_active ? 'success' : 'danger' }}">
-                                {{ $user->is_active ? 'Active' : 'Non Active' }}
-                            </span>
-                        </td>
-                        <td>
-                            @if (!$user->hasRole('superadmin'))
-                                <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-info">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </a>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
-                                    class="d-inline swal-delete" data-name="{{ $user->name }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i> Hapus
-                                    </button>
-                                </form>
-                            @else
-                                <span class="badge bg-secondary">Superadmin</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center">Tidak ada data user.</td>
-                    </tr>
-                @endforelse
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
-    <div class="mt-3">
-        {{ $users->links() }}
-    </div>
+    @push('scripts')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        let table;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Initializing Users DataTable...');
+            table = $('#usersTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                ajax: {
+                    url: "{{ route('admin.users.index') }}",
+                    type: 'GET',
+                    error: function (xhr, status, error) {
+                        console.error('Error loading data:', status, error, xhr.responseText);
+                    }
+                },
+                columns: [
+                    { data: 'id_short', name: 'id' },
+                    { data: 'name', name: 'name' },
+                    { data: 'email', name: 'email' },
+                    { data: 'job_title', name: 'job_tittle' },
+                    { data: 'role', name: 'role_id' },
+                    { data: 'created_at', name: 'created_at' },
+                    { data: 'status', name: 'is_active', orderable: false },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+                },
+                pageLength: 15,
+                lengthMenu: [10, 15, 25, 50],
+                dom: '<"row"<"col-md-6"l><"col-md-6"f>>rtip'
+            });
+
+            // Handle delete with SweetAlert
+            $(document).on('submit', '.swal-delete', function (e) {
+                e.preventDefault();
+                const form = this;
+                const userName = $(form).data('name');
+
+                Swal.fire({
+                    title: 'Hapus User?',
+                    text: 'User ' + userName + ' akan dihapus secara permanen',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Hapus',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+    @endpush
 @endsection

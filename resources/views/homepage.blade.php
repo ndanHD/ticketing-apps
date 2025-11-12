@@ -132,7 +132,6 @@
 <footer class="bg-light py-4 mt-5">
     <div class="container text-center">
         <p class="mb-1">© {{ date('Y') }} Kawano Ticketing</p>
-        <small class="text-muted">Made with Bootstrap · Simple ticketing for teams</small>
     </div>
 </footer>
 

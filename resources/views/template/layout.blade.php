@@ -111,6 +111,46 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script>
+        // Initialize Choices.js on all <select> elements to make options searchable by default.
+        // Add attribute `data-no-search` on a <select> to opt-out.
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                document.querySelectorAll('select').forEach(function (el) {
+                    // skip if explicitly opted-out
+                    if (el.hasAttribute('data-no-search')) return;
+                    // skip if already initialized
+                    if (el.dataset.choicesInitialized) return;
+
+                    var opts = {
+                        searchEnabled: true,
+                        shouldSort: false,
+                        itemSelectText: '',
+                        searchFloor: 1,
+                    };
+
+                    // for multiple-selects enable remove button
+                    if (el.multiple) {
+                        opts.removeItemButton = true;
+                    }
+
+                    // initialize
+                    try {
+                        new Choices(el, opts);
+                        el.dataset.choicesInitialized = '1';
+                    } catch (e) {
+                        // fail silently for elements Choices can't handle
+                        // eslint-disable-next-line no-console
+                        console.warn('Choices init failed for select', el, e);
+                    }
+                });
+            } catch (e) {
+                // overall safety catch
+                // eslint-disable-next-line no-console
+                console.error('Choices init error', e);
+            }
+        });
+    </script>
     @stack('scripts')
     <script>
         window.Laravel = <?php echo json_encode(
