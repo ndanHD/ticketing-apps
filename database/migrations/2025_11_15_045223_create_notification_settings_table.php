@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notification_settings');
+        Schema::dropIfExists('tbl_notification_settings');
     }
 };
