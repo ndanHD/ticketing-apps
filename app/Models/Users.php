@@ -24,11 +24,15 @@ class Users extends Authenticatable
         'outlet_id',
         'outlet',
         'email',
+        'phone',
         'password',
         'must_change_password',
         'last_change_password',
         'reset_token',
-        'is_active'
+        'is_active',
+        'notify_whatsapp',
+        'notify_email',
+        'notify_desktop'
     ];
 
     protected $hidden = [

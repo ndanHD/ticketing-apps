@@ -16,10 +16,12 @@
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
             padding-top: 70px;
         }
+
         .site-nav {
             background: #fff;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
+
         .site-footer {
             background: #f8f9fa;
             padding: 2rem 0;
@@ -54,6 +56,18 @@
                                 $dash = route('user.dashboard');
                             }
                         @endphp
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="notificationDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell"></i>
+                                <span class="badge bg-danger" id="notif-count">0</span>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end" id="notif-list" style="width: 300px;">
+                                <li class="dropdown-item text-center text-muted">Loading...</li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item"><a class="nav-link" href="{{ $dash }}">Dashboard</a></li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
@@ -62,7 +76,9 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                 <li><a class="dropdown-item" href="#">{{ auth()->user()->name ?? 'Profil' }}</a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <form method="POST" action="{{ route('logout.post') }}" class="d-inline">
                                         @csrf
@@ -114,9 +130,9 @@
     <script>
         // Initialize Choices.js on all <select> elements to make options searchable by default.
         // Add attribute `data-no-search` on a <select> to opt-out.
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             try {
-                document.querySelectorAll('select').forEach(function (el) {
+                document.querySelectorAll('select').forEach(function(el) {
                     // skip if explicitly opted-out
                     if (el.hasAttribute('data-no-search')) return;
                     // skip if already initialized

@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'Kawano Ticketing')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,12 +19,39 @@
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
             padding-top: 70px;
         }
-        .navbar { background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); }
-        .sidebar { min-height: calc(100vh - 70px); background-color: #f8f9fa; }
-        .nav-link { color: #333; }
-        .nav-link:hover { color: #0d6efd; }
-        .nav-link.active { color: #0d6efd; font-weight: bold; }
-        .site-footer { background: #f8f9fa; padding: 1.5rem 0; margin-top: 2rem; }
+
+        .navbar {
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .sidebar {
+            min-height: calc(100vh - 70px);
+            background-color: #f8f9fa;
+        }
+
+        .nav-link {
+            color: #333;
+        }
+
+        .nav-link:hover {
+            color: #0d6efd;
+        }
+
+        .nav-link.active {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+
+        .site-footer {
+            background: #f8f9fa;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+
+        #notif-list .fw-bold {
+            background: #eef3ff;
+        }
     </style>
     @stack('head')
 </head>
@@ -44,6 +73,18 @@
                             Home</a></li>
 
                     @auth
+                        <li class="nav-item dropdown">
+                            <a class="nav-link" href="#" id="notificationDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell"></i>
+                                <span class="badge bg-danger" id="notif-count">0</span>
+                            </a>
+
+                            <ul class="dropdown-menu dropdown-menu-end" id="notif-list" style="width: 300px;">
+                                <li class="dropdown-item text-center text-muted">Loading...</li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -156,7 +197,8 @@
                                 <span class="nav-link text-muted text-uppercase small fw-bold">Manajemen User</span>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center" href="{{ route('admin.users.create') }}">
+                                <a class="nav-link d-flex align-items-center"
+                                    href="{{ route('admin.users.create') }}">
                                     <i class="bi bi-person-plus me-2"></i> Tambah User
                                 </a>
                             </li>
@@ -221,9 +263,9 @@
     <script>
         // Initialize Choices.js on all <select> elements in admin layout to make options searchable by default.
         // Add attribute `data-no-search` on a <select> to opt-out.
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             try {
-                document.querySelectorAll('select').forEach(function (el) {
+                document.querySelectorAll('select').forEach(function(el) {
                     if (el.hasAttribute('data-no-search')) return;
                     if (el.dataset.choicesInitialized) return;
 
@@ -264,6 +306,18 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/admin.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission().then(permission => {
+                    console.log("Notif permission:", permission);
+                });
+            }
+        });
+    </script>
+
+
+    </script>
 </body>
 
 </html>

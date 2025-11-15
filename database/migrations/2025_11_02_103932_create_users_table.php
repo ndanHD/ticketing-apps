@@ -17,12 +17,16 @@ return new class extends Migration
             $table->uuid('outlet_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone')->nullable();
             $table->string('password');
             $table->string('job_tittle');
             $table->boolean('must_change_password')->default(true);
             $table->timestamp('last_change_password')->nullable();
             $table->string('reset_token')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('notify_whatsapp')->default(true);
+            $table->boolean('notify_email')->default(true);
+            $table->boolean('notify_desktop')->default(true);
             $table->timestamps();
 
             $table->foreign('role_id')->references('id')->on('tbl_roles')->cascadeOnDelete();
