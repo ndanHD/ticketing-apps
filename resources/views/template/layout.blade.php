@@ -10,16 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="/css/homepage.css" rel="stylesheet">
+    <!-- <link href="/css/homepage.css" rel="stylesheet"> -->
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
             padding-top: 70px;
         }
+
         .site-nav {
             background: #fff;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
+
         .site-footer {
             background: #f8f9fa;
             padding: 2rem 0;
@@ -62,7 +64,9 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
                                 <li><a class="dropdown-item" href="#">{{ auth()->user()->name ?? 'Profil' }}</a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <form method="POST" action="{{ route('logout.post') }}" class="d-inline">
                                         @csrf
@@ -154,13 +158,13 @@
     @stack('scripts')
     <script>
         window.Laravel = <?php echo json_encode(
-            [
-                'success' => session('success'),
-                'error' => session('error'),
-                'errors' => $errors->any() ? $errors->all() : [],
-            ],
-            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
-        ); ?>;
+    [
+        'success' => session('success'),
+        'error' => session('error'),
+        'errors' => $errors->any() ? $errors->all() : [],
+    ],
+    JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
+); ?>;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/admin.js"></script>
