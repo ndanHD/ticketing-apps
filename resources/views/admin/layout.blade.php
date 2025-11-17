@@ -24,7 +24,7 @@
         <div class="col-12">
             <div class="navbar-header">
                 <a href="javascript:void(0);" class="bars"></a>
-                <a class="navbar-brand" href="index.html">Nexa</a>
+                <a class="navbar-brand" href="#">Kawano</a>
             </div>
 
             <ul class="nav navbar-nav navbar-left">
@@ -154,10 +154,14 @@
     </nav>
     <!-- Sidebar -->
     <aside id="leftsidebar" class="sidebar">
+        <div class="logo d-flex justify-content-center align-items-center my-4">
+            <img src="/img/kawano-logo.png" alt="Kawano Logo" class="">
+        </div>
         <div class="menu">
             <ul class="list">
                 <li>
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('admin.dashboard') ? 'toggled' : '' }}">
                         <i class="fa-solid fa-border-all"></i>
                         <span>
                             Dashboard
@@ -165,13 +169,15 @@
                     </a>
                 </li>
                 <li>
-                    <a href="javascript:void(0);" class="menu-toggle nav-link">
+                    <a href="javascript:void(0);"
+                        class="menu-toggle nav-link {{ request()->routeIs('admin.tickets.*') ? 'toggled' : '' }}">
                         <i class="bi bi-ticket-perforated"></i>
                         <span>Ticket</span>
                     </a>
                     <ul class="ml-menu">
                         <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center" href="{{ route('admin.tickets.index') }}">
+                            <a href="{{ route('admin.tickets.index') }}"
+                                class="nav-link d-flex align-items-center {{ request()->routeIs('admin.tickets.index') ? 'toggled' : '' }}">
                                 <i class="bi bi-ticket-fill me-2"></i> Ticket List
                             </a>
                         </li>
@@ -189,6 +195,15 @@
                         </a>
                     </li>
                 @endif
+                <li>
+                    <a href="{{ route('admin.report') }}"
+                        class="nav-link {{ request()->routeIs('admin.report') ? 'toggled' : '' }}">
+                        <i class="fa-solid fa-border-all"></i>
+                        <span>
+                            Report
+                        </span>
+                    </a>
+                </li>
 
                 <li>
                     <a href="javascript:void(0);" class="menu-toggle nav-link">
@@ -275,75 +290,6 @@
 
     <!-- Main Content -->
     <section class="content">
-        <!-- <nav class="navbar navbar-expand-lg navbar-light site-nav">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" href="{{ route('home') }}">{{ config('app.name', 'Kawano') }}</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="{{ route('admin.dashboard') }}"><i
-                                    class="bi bi-speedometer2"></i> Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url('/') }}"><i class="bi bi-house"></i>
-                                Home</a></li>
-
-                        @auth
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-circle"></i>
-                                    {{ auth()->user()->name ?? auth()->user()->email }}
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                                    <li><a class="dropdown-item" href="#">Profil</a></li>
-                                    <li>
-                                        <form method="POST" action="{{ route('logout.post') }}" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item text-danger">Logout</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                            @php
-                                $handlerNew = 0;
-                                try {
-                                    if (
-                                        auth()->user() &&
-                                        auth()->user()->role &&
-                                        auth()->user()->role->name === 'user_handler'
-                                    ) {
-                                        $handlerNew = \App\Models\Ticket::where('assign_to', auth()->user()->id)
-                                            ->where('created_at', '>=', now()->subDay())
-                                            ->count();
-                                    }
-                                } catch (\Exception $e) {
-                                    $handlerNew = 0;
-                                }
-                            @endphp
-                            @if (auth()->user() && auth()->user()->role && auth()->user()->role->name === 'user_handler')
-                                <li class="nav-item">
-                                    <a class="nav-link position-relative" href="{{ route('handler.tickets.index') }}">
-                                        <i class="bi bi-bell"></i> Notifikasi
-                                        @if ($handlerNew > 0)
-                                            <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ $handlerNew }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                            @endif
-                        @endauth
-
-                        @guest
-                            <li class="nav-item"><a class="nav-link" href="{{ route('login.show') }}"><i
-                                        class="bi bi-box-arrow-in-right"></i> Login</a></li>
-                        @endguest
-                    </ul>
-                </div>
-            </div>
-        </nav> -->
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
@@ -415,6 +361,13 @@
     JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
 ); ?>;
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"
+        integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V"
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/bundles/libscripts.bundle.js"></script>

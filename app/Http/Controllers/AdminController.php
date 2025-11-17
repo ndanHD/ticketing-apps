@@ -33,7 +33,9 @@ class AdminController extends Controller
             ->groupBy('tbl_outlets.name')
             ->orderByDesc('count')
             ->get()
-            ->mapWithKeys(function($r){ return [$r->outlet ?? 'Unassigned' => (int)$r->count]; })
+            ->mapWithKeys(function ($r) {
+                return [$r->outlet ?? 'Unassigned' => (int) $r->count];
+            })
             ->toArray();
 
         return view('admin.dashboard', compact('statusCounts', 'outletCounts'));
@@ -56,6 +58,20 @@ class AdminController extends Controller
             return Role::whereIn('name', ['user', 'handler'])->get();
         }
     }
+
+    /**
+     * Display list of users
+     */
+    public function report(Request $request)
+    {
+        // Jika request dari DataTable (check both ajax() dan draw parameter)
+        if ($request->ajax() || $request->has('draw')) {
+            return $this->getUsersDataTable($request);
+        }
+
+        return view('admin.report');
+    }
+
 
     /**
      * Display list of users

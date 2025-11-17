@@ -37,7 +37,7 @@ Route::middleware('require.login')->group(function () {
 });
 
 // User area - protected by user role
-Route::middleware(['require.login', 'must_change_password',  'role:user'])->group(function () {
+Route::middleware(['require.login', 'must_change_password', 'role:user'])->group(function () {
     Route::get('dashboard', [UserController::class, 'index'])->name('user.dashboard');
 
     Route::prefix('tickets')->controller(TicketUserController::class)->group(function () {
@@ -55,8 +55,11 @@ Route::middleware(['require.login', 'must_change_password',  'role:user'])->grou
     });
 });
 
+
+Route::get('report', [AdminController::class, 'report'])->name('admin.report');
+
 // Handler area - protected by handler role
-Route::middleware(['require.login', 'must_change_password',  'role:handler'])->prefix('handler')->group(function () {
+Route::middleware(['require.login', 'must_change_password', 'role:handler|admin|superadmin'])->prefix('handler')->group(function () {
     Route::get('dashboard', [HandlerController::class, 'dashboard'])->name('handler.dashboard');
     Route::get('tickets', [HandlerController::class, 'index'])->name('handler.tickets.index');
     Route::get('tickets/{ticket}', [HandlerController::class, 'show'])->name('handler.tickets.show');
@@ -69,7 +72,7 @@ Route::middleware(['require.login', 'must_change_password',  'role:handler'])->p
 });
 
 // Admin area - protected by admin and superadmin roles
-Route::middleware(['require.login', 'must_change_password',  'role:admin|superadmin'])->prefix('admin')->group(function () {
+Route::middleware(['require.login', 'must_change_password', 'role:admin|superadmin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
 
     // User management:
@@ -115,7 +118,7 @@ Route::middleware(['require.login', 'must_change_password',  'role:admin|superad
         Route::get('/{ticket}', 'show')->name('admin.tickets.show');
         Route::post('/{ticket}/comments', 'addComment')->name('admin.tickets.comments.store');
         Route::post('/{ticket}/assign', 'assign')->name('admin.tickets.assign');
-    Route::post('/{ticket}/pending/close', 'closePendingAsAdmin')->name('admin.tickets.pending.close');
+        Route::post('/{ticket}/pending/close', 'closePendingAsAdmin')->name('admin.tickets.pending.close');
         Route::get('/{ticket}/edit', 'edit')->name('admin.tickets.edit');
         Route::put('/{ticket}', 'update')->name('admin.tickets.update');
         Route::delete('/{ticket}', 'destroy')->name('admin.tickets.destroy');
