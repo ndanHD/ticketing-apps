@@ -56,7 +56,7 @@ Route::middleware(['require.login', 'must_change_password', 'role:user'])->group
 });
 
 
-Route::get('report', [AdminController::class, 'report'])->name('admin.report');
+
 
 // Handler area - protected by handler role
 Route::middleware(['require.login', 'must_change_password', 'role:handler|admin|superadmin'])->prefix('handler')->group(function () {
@@ -71,6 +71,7 @@ Route::middleware(['require.login', 'must_change_password', 'role:handler|admin|
     Route::post('tickets/{ticket}/pending/close', [HandlerController::class, 'closePending'])->name('handler.tickets.pending.close');
 });
 
+Route::get('report', [AdminController::class, 'report'])->name('admin.report');
 // Admin area - protected by admin and superadmin roles
 Route::middleware(['require.login', 'must_change_password', 'role:admin|superadmin'])->prefix('admin')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');

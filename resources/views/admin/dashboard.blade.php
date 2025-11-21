@@ -34,7 +34,6 @@
                 <div class="card-body d-flex align-items-center justify-content-evenly flex-column text-primary fw-bold">
                     <div class="display-6">
                         <i class="fa-solid fa-envelope-open"></i>
-                        <!-- <i class="bi bi-exclamation-circle"></i> -->
                     </div>
                     <div>Open</div>
                     <div class="h4 mb-0">{{ $open }}</div>

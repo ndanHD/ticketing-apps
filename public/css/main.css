@@ -4968,7 +4968,8 @@ small {
     animation: none !important;
 }
 section.content {
-    margin: 54px 0px 15px 250px;
+    margin: 54px 0px 0px 250px;
+    /* height: calc(100vh - 54px); */
     -moz-transition: 0.5s;
     -o-transition: 0.5s;
     -webkit-transition: 0.5s;
@@ -5255,7 +5256,7 @@ section.content {
     left: 0px !important;
     top: 6px !important;
 }
-.btn:not(.btn-link):not(.btn-circle) {
+/* .btn:not(.btn-link):not(.btn-circle) {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 10px rgba(0, 0, 0, 0.12);
     -webkit-border-radius: 2px;
     -moz-border-radius: 2px;
@@ -5264,14 +5265,14 @@ section.content {
     border: none;
     font-size: 13px;
     outline: none;
-}
+} */
 .btn:not(.btn-link):not(.btn-circle):hover {
     outline: none;
 }
 .btn:not(.btn-link):not(.btn-circle) i {
-    font-size: 20px;
+    width: 20px;
+    font-size: 16px;
     position: relative;
-    top: 3px;
 }
 .btn-warning,
 .btn-warning:hover,
